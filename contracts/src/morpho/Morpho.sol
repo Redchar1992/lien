@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.19;
+// Pragma relaxed from `0.8.19` to `^0.8.19` so the engine compiles in one unit
+// with the ^0.8.20 RWA/OZ contracts that integrate it (target evm_version=paris,
+// so no PUSH0). Engine logic is unchanged from morpho-org/morpho-blue.
+pragma solidity ^0.8.19;
 
 import {
     Id,
