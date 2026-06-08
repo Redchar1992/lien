@@ -4,13 +4,12 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
-# EVM target (Base / Sepolia). Common denominator: the vendored Morpho engine is
-# pinned to solc 0.8.19 (whose max target is paris); new RWA contracts use
-# ^0.8.20 and Foundry multi-compiles by pragma. paris bytecode runs on every EVM
-# chain. (The TRON sibling lend-solvent also pinned paris, but for a different
-# reason — TVM lacks PUSH0; here it's purely the 0.8.19 engine. Can move to
-# cancun once the engine constraint is lifted.)
-evm_version = "paris"
+# EVM target (Base / Sepolia, both Cancun-enabled). The vendored Morpho engine's
+# pragma was relaxed 0.8.19 -> ^0.8.19, so the whole project now compiles at the
+# latest solc; OZ's ERC4626 deps (Memory.sol) use the `mcopy` Cancun opcode, so
+# we target cancun. (The TRON sibling lend-solvent stays on paris because TVM
+# lacks these opcodes — that's the TVM-vs-EVM divergence, not a lien constraint.)
+evm_version = "cancun"
 
 [fmt]
 line_length = 120

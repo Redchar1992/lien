@@ -53,6 +53,7 @@ Postgres · pnpm + turbo monorepo · Base Sepolia.
 - [x] **M3** — isolated lending market over Morpho + NAV→1e36 oracle adapter + permissioned-collateral liquidation (router pattern) — 8 tests · [ADRs](contracts/docs/合规设计.md)
 - [x] **M4** — full-stack frontend (React + viem/wagmi + RainbowKit) + viem tx-lifecycle SDK + ponder indexer scaffold — typechecks
 - [x] **M5** — deployed + seeded live on **Base Sepolia** ([addresses](#live-on-base-sepolia)); `pnpm --filter @lien/web dev` connects to it
+- [x] **M6** — curated ERC-4626 vault (MetaMorpho-style): depositors lend USDC across isolated RWA markets under per-market caps; yield accrues to depositors — 4 tests
 
 ## Live on Base Sepolia
 
