@@ -52,7 +52,27 @@ Postgres · pnpm + turbo monorepo · Base Sepolia.
 - [x] **M2** — NAV oracle (staleness + circuit breaker) + subscription/redemption (USDC ↔ RWA @ NAV, T+N queue) — 11 tests
 - [x] **M3** — isolated lending market over Morpho + NAV→1e36 oracle adapter + permissioned-collateral liquidation (router pattern) — 8 tests · [ADRs](contracts/docs/合规设计.md)
 - [x] **M4** — full-stack frontend (React + viem/wagmi + RainbowKit) + viem tx-lifecycle SDK + ponder indexer scaffold — typechecks
-- [ ] **M5** — Base Sepolia deploy + demo + architecture decision docs
+- [x] **M5** — deployed + seeded live on **Base Sepolia** ([addresses](#live-on-base-sepolia)); `pnpm --filter @lien/web dev` connects to it
+
+## Live on Base Sepolia
+
+Deployed + seeded 2026-06-08 (market liquidity, a healthy borrow position, router
+buffer + redemption liquidity). NAV $1.00. Run `pnpm --filter @lien/web dev` and
+connect a Base Sepolia wallet.
+
+| Contract | Address |
+| --- | --- |
+| USDC (mock, 6-dec) | `0xd11cC6B62825fFa10Cf96Dd630D2eD48263636e5` |
+| RwaToken (tBILL) | `0xd59D41cF09D4c9Cf06723f0d04E5Fb7976AE481C` |
+| IdentityRegistry | `0x47eA4Cddbc918204F5cbCB27F88c1e02Ce746618` |
+| NavOracle | `0xF8d443fDC625a3f0990cdAb6Ac6B5Da5e379017d` |
+| SubscriptionManager | `0x8Fe81a819c6280678b607fDCCC09AB54e526E48b` |
+| Morpho (engine) | `0x62bd467F599153e8E3C46c6629CA2b774AF405B4` |
+| MorphoNavOracleAdapter | `0x86e9000956B488192F3e572d2C73c0C0DfCB7b0b` |
+| LiquidationRouter | `0xdBc5Fe8F7Bc3cd34F5fBdBb670F1Aa7690d25375` |
+
+To interact (subscribe / borrow) a wallet must be KYC-verified by the agent — the
+permission model is the point. Reads (NAV, positions) work for anyone.
 
 See [`docs/开发计划.md`](docs/开发计划.md) for the full plan and RWA compliance notes.
 
