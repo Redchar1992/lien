@@ -1,0 +1,39 @@
+:root {
+  --bg: #0b0e14;
+  --panel: #151a23;
+  --line: #232a36;
+  --text: #e6e9ef;
+  --muted: #8a93a3;
+  --ok: #2ecc71;
+  --warn: #f1c40f;
+  --danger: #e74c3c;
+  --accent: #6aa0ff;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.app { max-width: 960px; margin: 0 auto; padding: 24px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.logo { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+.tagline { color: var(--muted); font-size: 13px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.banner { background: #1d2330; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; color: var(--muted); margin-bottom: 16px; }
+.banner code { color: var(--accent); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.label { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.value { font-size: 22px; font-weight: 700; }
+.sub { color: var(--muted); font-size: 13px; min-height: 18px; margin-top: 4px; }
+.row { display: flex; gap: 8px; margin-top: 10px; }
+input { flex: 1; background: #0e131b; border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 8px 10px; }
+button { background: var(--accent); color: #0b0e14; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); }
+.badge.ok { color: var(--ok); border-color: #1d3a2a; }
+.badge.warn { color: var(--warn); border-color: #3a341d; }
+.badge.danger { color: var(--danger); border-color: #3a2222; }
+.badge.muted { color: var(--muted); }
+.txline { margin-top: 10px; font-size: 13px; color: var(--muted); }
+.txline.confirmed { color: var(--ok); }
+.txline.failed { color: var(--danger); }
+.foot { color: var(--muted); font-size: 12px; margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; }

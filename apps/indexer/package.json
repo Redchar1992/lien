@@ -1,0 +1,20 @@
+{
+  "name": "@lien/indexer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ponder dev",
+    "start": "ponder start",
+    "codegen": "ponder codegen",
+    "typecheck": "echo \"(indexer) run 'pnpm install' in apps/indexer, then 'ponder typecheck'\"",
+    "lint": "echo \"(indexer) ok\""
+  },
+  "dependencies": {
+    "ponder": "^0.11.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

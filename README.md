@@ -51,7 +51,7 @@ Postgres · pnpm + turbo monorepo · Base Sepolia.
 - [x] **M1** — compliance core (IdentityRegistry, permissioned RWA token, agent roles) — 14 tests
 - [x] **M2** — NAV oracle (staleness + circuit breaker) + subscription/redemption (USDC ↔ RWA @ NAV, T+N queue) — 11 tests
 - [x] **M3** — isolated lending market over Morpho + NAV→1e36 oracle adapter + permissioned-collateral liquidation (router pattern) — 8 tests · [ADRs](contracts/docs/合规设计.md)
-- [ ] **M4** — full-stack frontend (viem/wagmi) + indexer
+- [x] **M4** — full-stack frontend (React + viem/wagmi + RainbowKit) + viem tx-lifecycle SDK + ponder indexer scaffold — typechecks
 - [ ] **M5** — Base Sepolia deploy + demo + architecture decision docs
 
 See [`docs/开发计划.md`](docs/开发计划.md) for the full plan and RWA compliance notes.

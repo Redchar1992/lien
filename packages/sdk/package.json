@@ -11,5 +11,6 @@
     "test": "echo \"(sdk) no tests yet\""
   },
   "dependencies": { "@lien/config": "workspace:*", "@lien/core": "workspace:*" },
-  "devDependencies": { "typescript": "^5.7.2" }
+  "peerDependencies": { "viem": "^2.21.0" },
+  "devDependencies": { "typescript": "^5.7.2", "viem": "^2.21.0" }
 }
