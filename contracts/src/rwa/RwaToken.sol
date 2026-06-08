@@ -64,6 +64,13 @@ contract RwaToken is ERC20, AccessControl {
             require(!frozen[to], "RWA: recipient frozen");
             require(identityRegistry.isVerified(to), "RWA: recipient not verified");
         }
+        // Peer-to-peer transfer (not mint, not burn, not an agent-forced move):
+        // the SENDER must also be verified, per ERC-3643. This stops a de-listed
+        // (removeIdentity'd) but un-frozen holder from offloading to other holders;
+        // they can still redeem (burn) and the agent can still forceTransfer.
+        if (from != address(0) && to != address(0) && !_forcing) {
+            require(identityRegistry.isVerified(from), "RWA: sender not verified");
+        }
         super._update(from, to, value);
     }
 

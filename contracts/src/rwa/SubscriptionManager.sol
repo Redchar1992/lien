@@ -47,6 +47,10 @@ contract SubscriptionManager is AccessControl, ReentrancyGuard {
 
     RedemptionRequest[] public requests;
 
+    /// Sum of unclaimed `usdcOwed` across queued redemptions. The issuer must not
+    /// withdraw proceeds below this — otherwise queued redemptions can't be paid.
+    uint256 public outstandingRedemptions;
+
     event Subscribed(address indexed user, uint256 usdcIn, uint256 rwaOut, uint256 nav);
     event RedemptionRequested(uint256 indexed id, address indexed user, uint256 rwaIn, uint256 usdcOwed, uint64 claimableAt, uint256 nav);
     event RedemptionClaimed(uint256 indexed id, address indexed user, uint256 usdcOut);
@@ -100,6 +104,7 @@ contract SubscriptionManager is AccessControl, ReentrancyGuard {
         uint64 claimableAt = uint64(block.timestamp + settlementDelay);
         id = requests.length;
         requests.push(RedemptionRequest({user: msg.sender, usdcOwed: usdcOwed, claimableAt: claimableAt, claimed: false}));
+        outstandingRedemptions += usdcOwed;
         emit RedemptionRequested(id, msg.sender, rwaAmount, usdcOwed, claimableAt, nav);
     }
 
@@ -109,6 +114,7 @@ contract SubscriptionManager is AccessControl, ReentrancyGuard {
         require(!r.claimed, "SM: claimed");
         require(block.timestamp >= r.claimableAt, "SM: not settled");
         r.claimed = true;
+        outstandingRedemptions -= r.usdcOwed;
         usdc.safeTransfer(msg.sender, r.usdcOwed);
         emit RedemptionClaimed(id, msg.sender, r.usdcOwed);
     }
@@ -126,7 +132,10 @@ contract SubscriptionManager is AccessControl, ReentrancyGuard {
     }
 
     /// @notice Issuer deploys subscription proceeds off-chain into the real asset.
+    /// @dev Cannot dip into the redemption reserve: the post-withdrawal balance
+    /// must still cover all outstanding (queued, unclaimed) redemptions.
     function withdrawProceeds(address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(usdc.balanceOf(address(this)) - amount >= outstandingRedemptions, "SM: would dip into redemption reserve");
         usdc.safeTransfer(to, amount);
         emit ProceedsWithdrawn(to, amount);
     }

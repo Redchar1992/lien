@@ -39,7 +39,8 @@ export function SubscribeRedeem() {
   const disabled = !address || !d.isDeployed
 
   async function subscribe() {
-    await run({ address: d.usdc, abi: erc20Abi, functionName: 'approve', args: [d.subscriptionManager, usdcAmt] })
+    const approved = await run({ address: d.usdc, abi: erc20Abi, functionName: 'approve', args: [d.subscriptionManager, usdcAmt] })
+    if (approved?.status !== 'confirmed') return // don't fire the action if approve failed/was rejected
     await run({ address: d.subscriptionManager, abi: subscriptionManagerAbi, functionName: 'subscribe', args: [usdcAmt] })
   }
   async function redeem() {
@@ -102,7 +103,8 @@ export function BorrowPanel() {
   const disabled = !address || !d.isDeployed
 
   async function supplyCollateral() {
-    await run({ address: d.rwaToken, abi: erc20Abi, functionName: 'approve', args: [d.morpho, collAmt] })
+    const approved = await run({ address: d.rwaToken, abi: erc20Abi, functionName: 'approve', args: [d.morpho, collAmt] })
+    if (approved?.status !== 'confirmed') return
     await run({
       address: d.morpho,
       abi: morphoAbi,

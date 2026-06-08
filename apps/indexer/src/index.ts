@@ -1,11 +1,9 @@
 import { ponder } from 'ponder:registry'
 import { liquidation, navUpdate, redemption, subscription } from 'ponder:schema'
 
-const rowId = (e: { transactionHash: string; logIndex: number }) => `${e.transactionHash}-${e.logIndex}`
-
 ponder.on('SubscriptionManager:Subscribed', async ({ event, context }) => {
   await context.db.insert(subscription).values({
-    id: rowId(event.log),
+    id: `${event.transaction.hash}-${event.log.logIndex}`,
     user: event.args.user,
     usdcIn: event.args.usdcIn,
     rwaOut: event.args.rwaOut,
@@ -32,7 +30,7 @@ ponder.on('SubscriptionManager:RedemptionClaimed', async ({ event, context }) =>
 
 ponder.on('NavOracle:NavUpdated', async ({ event, context }) => {
   await context.db.insert(navUpdate).values({
-    id: rowId(event.log),
+    id: `${event.transaction.hash}-${event.log.logIndex}`,
     nav: event.args.nav,
     forced: event.args.forced,
     timestamp: event.block.timestamp,
@@ -41,7 +39,7 @@ ponder.on('NavOracle:NavUpdated', async ({ event, context }) => {
 
 ponder.on('LiquidationRouter:Liquidated', async ({ event, context }) => {
   await context.db.insert(liquidation).values({
-    id: rowId(event.log),
+    id: `${event.transaction.hash}-${event.log.logIndex}`,
     liquidator: event.args.liquidator,
     borrower: event.args.borrower,
     seized: event.args.seized,

@@ -14,3 +14,7 @@ contracts/broadcast/
 # misc
 .DS_Store
 *.log
+*.tsbuildinfo
+# ponder
+.ponder/
+apps/indexer/ponder-env.d.ts

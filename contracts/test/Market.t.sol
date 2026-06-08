@@ -51,11 +51,6 @@ contract MarketTest is Test {
         morpho = IMorpho(address(new Morpho(admin)));
         irm = new IrmMock();
         adapter = new MorphoNavOracleAdapter(address(oracle), 18, 6); // collDec=18, loanDec=6
-        router =
-            new LiquidationRouter(address(morpho), address(usdc), address(rwa), address(oracle), address(mgr), 6, 18, admin);
-
-        morpho.enableIrm(address(irm));
-        morpho.enableLltv(LLTV);
         mp = MarketParams({
             loanToken: address(usdc),
             collateralToken: address(rwa),
@@ -63,6 +58,10 @@ contract MarketTest is Test {
             irm: address(irm),
             lltv: LLTV
         });
+        router = new LiquidationRouter(address(morpho), mp, address(oracle), address(mgr), 6, 18, admin);
+
+        morpho.enableIrm(address(irm));
+        morpho.enableLltv(LLTV);
         morpho.createMarket(mp);
 
         // KYC: borrower, KYC keeper, the engine and the router (both must hold RWA)
@@ -197,5 +196,21 @@ contract MarketTest is Test {
         vm.prank(mallory);
         vm.expectRevert(); // adapter.price() -> navChecked() reverts "NAV: stale"
         router.liquidate(mp, alice, 400e18);
+    }
+
+    // --- router is pinned to ONE market (buffer-drain guard) ---
+
+    function test_router_rejects_wrong_market() public {
+        _makeLiquidatable();
+        MarketParams memory wrong = MarketParams({
+            loanToken: address(usdc),
+            collateralToken: address(0xBEEF), // different collateral => different market id
+            oracle: address(adapter),
+            irm: address(irm),
+            lltv: LLTV
+        });
+        vm.prank(mallory);
+        vm.expectRevert("router: wrong market");
+        router.liquidate(wrong, alice, 400e18);
     }
 }

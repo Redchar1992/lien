@@ -6,7 +6,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {IMorpho, MarketParams} from "../morpho/interfaces/IMorpho.sol";
+import {IMorpho, MarketParams, Id} from "../morpho/interfaces/IMorpho.sol";
+import {MarketParamsLib} from "../morpho/libraries/MarketParamsLib.sol";
 import {NavOracle} from "../oracle/NavOracle.sol";
 import {SubscriptionManager} from "../rwa/SubscriptionManager.sol";
 
@@ -31,12 +32,19 @@ import {SubscriptionManager} from "../rwa/SubscriptionManager.sol";
 /// for keepers, which is what keeps a permissioned-collateral market solvent.
 contract LiquidationRouter is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
+    using MarketParamsLib for MarketParams;
 
     IMorpho public immutable morpho;
     IERC20 public immutable usdc;
     IERC20 public immutable rwa;
     NavOracle public immutable navOracle;
     SubscriptionManager public immutable manager;
+
+    /// The ONE market this router will liquidate. Without this pin, a griefer
+    /// could pass any USDC-loan Morpho market (with non-RWA collateral and a
+    /// self-controlled oracle), making the router front USDC and overpay
+    /// "profit" computed off the RWA NAV — draining the buffer.
+    Id public immutable expectedMarketId;
 
     uint256 public immutable usdcScale;
     uint256 public immutable rwaScale;
@@ -49,8 +57,7 @@ contract LiquidationRouter is AccessControl, ReentrancyGuard {
 
     constructor(
         address morpho_,
-        address usdc_,
-        address rwa_,
+        MarketParams memory market,
         address navOracle_,
         address manager_,
         uint8 usdcDecimals,
@@ -58,14 +65,15 @@ contract LiquidationRouter is AccessControl, ReentrancyGuard {
         address admin
     ) {
         morpho = IMorpho(morpho_);
-        usdc = IERC20(usdc_);
-        rwa = IERC20(rwa_);
+        usdc = IERC20(market.loanToken);
+        rwa = IERC20(market.collateralToken);
         navOracle = NavOracle(navOracle_);
         manager = SubscriptionManager(manager_);
         usdcScale = 10 ** usdcDecimals;
         rwaScale = 10 ** rwaDecimals;
+        expectedMarketId = market.id();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        IERC20(usdc_).forceApprove(morpho_, type(uint256).max);
+        IERC20(market.loanToken).forceApprove(morpho_, type(uint256).max);
     }
 
     /// @notice Liquidate a position on behalf of ANY caller (no KYC, no capital).
@@ -76,6 +84,7 @@ contract LiquidationRouter is AccessControl, ReentrancyGuard {
         nonReentrant
         returns (uint256 seized, uint256 repaid)
     {
+        require(Id.unwrap(marketParams.id()) == Id.unwrap(expectedMarketId), "router: wrong market");
         (seized, repaid) = morpho.liquidate(marketParams, borrower, seizedAssets, 0, "");
 
         uint256 nav = navOracle.navChecked();

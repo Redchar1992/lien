@@ -168,4 +168,29 @@ contract SubscriptionTest is Test {
         mgr.subscribe(100e6);
         vm.stopPrank();
     }
+
+    // --- redemption reserve is protected from withdrawProceeds ---
+
+    function test_withdrawProceeds_cannot_dip_into_redemption_reserve() public {
+        vm.prank(alice);
+        mgr.subscribe(100e6);
+        vm.prank(alice);
+        mgr.requestRedemption(100e18); // outstandingRedemptions = 100e6
+        assertEq(mgr.outstandingRedemptions(), 100e6);
+        // mgr holds 1000 (funded in setUp) + 100 (subscribe) = 1100; reserve = 100
+        vm.prank(admin);
+        vm.expectRevert("SM: would dip into redemption reserve");
+        mgr.withdrawProceeds(admin, 1001e6); // would leave 99 < 100
+    }
+
+    function test_withdrawProceeds_up_to_reserve_ok() public {
+        vm.prank(alice);
+        mgr.subscribe(100e6);
+        vm.prank(alice);
+        mgr.requestRedemption(100e18);
+        uint256 bal = usdc.balanceOf(address(mgr));
+        vm.prank(admin);
+        mgr.withdrawProceeds(admin, bal - 100e6); // leaves exactly the 100 reserve
+        assertEq(usdc.balanceOf(address(mgr)), 100e6);
+    }
 }

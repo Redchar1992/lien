@@ -7,7 +7,7 @@
     "dev": "ponder dev",
     "start": "ponder start",
     "codegen": "ponder codegen",
-    "typecheck": "echo \"(indexer) run 'pnpm install' in apps/indexer, then 'ponder typecheck'\"",
+    "typecheck": "ponder codegen && tsc --noEmit",
     "lint": "echo \"(indexer) ok\""
   },
   "dependencies": {

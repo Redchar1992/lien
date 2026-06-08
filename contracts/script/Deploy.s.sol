@@ -38,6 +38,7 @@ contract Deploy is Script {
         Sys memory s = _deploy(deployer);
         MarketParams memory mp = _market(s);
         s.morpho.createMarket(mp);
+        s.router = new LiquidationRouter(address(s.morpho), mp, address(s.oracle), address(s.mgr), 6, 18, deployer);
         _kyc(s, deployer);
         _seed(s, mp, deployer);
         vm.stopBroadcast();
@@ -56,9 +57,6 @@ contract Deploy is Script {
         s.morpho = IMorpho(address(new Morpho(deployer)));
         s.irm = new IrmMock();
         s.adapter = new MorphoNavOracleAdapter(address(s.oracle), 18, 6);
-        s.router = new LiquidationRouter(
-            address(s.morpho), address(s.usdc), address(s.rwa), address(s.oracle), address(s.mgr), 6, 18, deployer
-        );
 
         s.morpho.enableIrm(address(s.irm));
         s.morpho.enableLltv(LLTV);

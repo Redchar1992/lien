@@ -55,6 +55,24 @@ contract ComplianceTest is Test {
         token.transfer(bob, 1e18);
     }
 
+    function test_transfer_from_unverified_sender_reverts() public {
+        // alice holds tokens but gets de-listed -> can't offload to a verified holder
+        vm.prank(admin);
+        reg.removeIdentity(alice);
+        vm.prank(alice);
+        vm.expectRevert("RWA: sender not verified");
+        token.transfer(bob, 1e18);
+    }
+
+    function test_forceTransfer_still_works_from_unverified_sender() public {
+        // agent can still seize from a de-listed holder (forced move bypasses sender check)
+        vm.startPrank(admin);
+        reg.removeIdentity(alice);
+        token.forceTransfer(alice, bob, 100e18);
+        vm.stopPrank();
+        assertEq(token.balanceOf(bob), 100e18);
+    }
+
     // --- freezing ---
 
     function test_frozen_sender_blocked() public {
