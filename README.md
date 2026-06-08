@@ -49,7 +49,7 @@ Postgres · pnpm + turbo monorepo · Base Sepolia.
 
 - [x] **M0** — monorepo scaffold + vendored Morpho engine
 - [x] **M1** — compliance core (IdentityRegistry, permissioned RWA token, agent roles) — 14 tests
-- [ ] **M2** — NAV oracle + subscription/redemption (USDC ↔ RWA @ NAV, T+N queue)
+- [x] **M2** — NAV oracle (staleness + circuit breaker) + subscription/redemption (USDC ↔ RWA @ NAV, T+N queue) — 11 tests
 - [ ] **M3** — isolated lending market + NAV-oracle adapter + permissioned-collateral liquidation
 - [ ] **M4** — full-stack frontend (viem/wagmi) + indexer
 - [ ] **M5** — Base Sepolia deploy + demo + architecture decision docs
