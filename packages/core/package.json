@@ -1,0 +1,14 @@
+{
+  "name": "@lien/core",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "lint": "echo \"(core) no lint yet\"",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"(core) no tests yet\""
+  },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

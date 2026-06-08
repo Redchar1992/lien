@@ -1,0 +1,16 @@
+# deps
+node_modules/
+# builds
+dist/
+.turbo/
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+# env / secrets
+.env
+.env.*
+!.env.example
+# misc
+.DS_Store
+*.log
