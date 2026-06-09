@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {INavSource} from "./INavSource.sol";
 
 /// @title NavOracle
 /// @notice Pushes the off-chain Net Asset Value of one whole RWA share on-chain.
@@ -15,7 +16,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 ///  - **circuit breaker**: `setNav` rejects a per-update move larger than
 ///    `maxDeviationBps` (fat-finger / compromised feed). A genuine large jump
 ///    goes through `forceSetNav` (admin), which is logged.
-contract NavOracle is AccessControl {
+contract NavOracle is AccessControl, INavSource {
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
 
     /// value of 1 whole RWA share, 1e18-scaled (e.g. $1.00 => 1e18)
@@ -70,7 +71,7 @@ contract NavOracle is AccessControl {
     }
 
     /// @notice NAV, reverting if paused or stale. Consumers MUST use this, not `nav`.
-    function navChecked() public view returns (uint256) {
+    function navChecked() public view override returns (uint256) {
         require(!paused, "NAV: paused");
         require(block.timestamp - updatedAt <= maxStaleness, "NAV: stale");
         return nav;

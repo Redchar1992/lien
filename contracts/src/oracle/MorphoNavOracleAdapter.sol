@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IOracle} from "../morpho/interfaces/IOracle.sol";
-import {NavOracle} from "./NavOracle.sol";
+import {INavSource} from "./INavSource.sol";
 
 /// @title MorphoNavOracleAdapter
 /// @notice Adapts the RWA `NavOracle` to Morpho's `IOracle`, which expects the
@@ -23,11 +23,11 @@ import {NavOracle} from "./NavOracle.sol";
 /// positions off a dead feed. Trade-off: a stale feed also blocks liquidations;
 /// mitigated by a generous staleness window + an oracle keeper. Documented in docs/.
 contract MorphoNavOracleAdapter is IOracle {
-    NavOracle public immutable navOracle;
+    INavSource public immutable navSource;
     uint256 public immutable scaleMul;
 
-    constructor(address navOracle_, uint8 collateralDecimals, uint8 loanDecimals) {
-        navOracle = NavOracle(navOracle_);
+    constructor(address navSource_, uint8 collateralDecimals, uint8 loanDecimals) {
+        navSource = INavSource(navSource_);
         // e = 18 + loanDecimals - collateralDecimals ; price = nav * 10**e
         int256 e = int256(18) + int256(uint256(loanDecimals)) - int256(uint256(collateralDecimals));
         require(e >= 0, "adapter: negative exponent unsupported");
@@ -36,6 +36,6 @@ contract MorphoNavOracleAdapter is IOracle {
 
     /// @inheritdoc IOracle
     function price() external view returns (uint256) {
-        return navOracle.navChecked() * scaleMul; // reverts if NAV stale/paused
+        return navSource.navChecked() * scaleMul; // reverts if NAV stale/paused/unavailable
     }
 }
