@@ -78,6 +78,9 @@ export const DICT = {
     zh: 'EVM 原生(viem/wagmi)。交易生命週期 SDK 由 TRON 版移植 —— 同一套狀態機 + 錯誤碼;TronWeb→viem 是介面替換,而非重寫。',
   },
   'footer.source': { en: 'source', zh: '原始碼' },
+  balance: { en: 'Balance', zh: '餘額' },
+  max: { en: 'Max', zh: '最大' },
+  'borrow.available': { en: 'Available to borrow', zh: '可借額度' },
 }
 
 export type I18nKey = keyof typeof DICT

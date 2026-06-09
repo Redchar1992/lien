@@ -4,6 +4,7 @@ import { computeMarketId, identityRegistryAbi, morphoAbi, navOracleAbi } from '@
 import { deployment as d } from '../deployments'
 import { Hint } from './Hint'
 import { useI18n } from '../i18n'
+import { fmt } from '../format'
 
 export function KycBadge() {
   const { address } = useAccount()
@@ -72,13 +73,13 @@ export function PortfolioCard() {
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    query: { enabled: Boolean(address) && d.isDeployed },
+    query: { enabled: Boolean(address) && d.isDeployed, refetchInterval: 8000 },
   })
   const { data: nav } = useReadContract({
     address: d.navOracle,
     abi: navOracleAbi,
     functionName: 'nav',
-    query: { enabled: d.isDeployed },
+    query: { enabled: d.isDeployed, refetchInterval: 12000 },
   })
   const usdValueWad = balance !== undefined && nav !== undefined ? (balance * nav) / 10n ** 18n : undefined
   return (
@@ -87,8 +88,8 @@ export function PortfolioCard() {
         {t('portfolio.label')}
         <Hint text={t('portfolio.hint')} />
       </div>
-      <div className="value">{balance !== undefined ? `${formatUnits(balance, d.rwaDecimals)} tBILL` : '—'}</div>
-      <div className="sub">{usdValueWad !== undefined ? `≈ $${formatUnits(usdValueWad, 18)}` : ''}</div>
+      <div className="value">{balance !== undefined ? `${fmt(balance, d.rwaDecimals)} tBILL` : '—'}</div>
+      <div className="sub">{usdValueWad !== undefined ? `≈ $${fmt(usdValueWad, 18)}` : ''}</div>
     </div>
   )
 }
@@ -118,11 +119,11 @@ export function StatsBar() {
     <div className="stats">
       <div className="stat">
         <div className="stat-label">{t('stats.liquidity')}</div>
-        <div className="stat-value">{liquidity !== undefined ? `$${formatUnits(liquidity, d.usdcDecimals)}` : '—'}</div>
+        <div className="stat-value">{liquidity !== undefined ? `$${fmt(liquidity, d.usdcDecimals)}` : '—'}</div>
       </div>
       <div className="stat">
         <div className="stat-label">{t('stats.outstanding')}</div>
-        <div className="stat-value">{supply !== undefined ? `${formatUnits(supply, d.rwaDecimals)}` : '—'}</div>
+        <div className="stat-value">{supply !== undefined ? `${fmt(supply, d.rwaDecimals)}` : '—'}</div>
       </div>
       <div className="stat">
         <div className="stat-label">{t('stats.maxltv')}</div>

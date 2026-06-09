@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useAccount, usePublicClient, useReadContract } from 'wagmi'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { type PublicClient, erc20Abi, formatUnits, parseUnits } from 'viem'
 import { computeMarketId, morphoAbi, navOracleAbi, readPositionHealth, subscriptionManagerAbi } from '@lien/sdk'
 import { deployment as d } from '../deployments'
@@ -8,6 +8,34 @@ import { useTx } from '../tx'
 import { HealthGauge } from './Widgets'
 import { Hint } from './Hint'
 import { useI18n } from '../i18n'
+import { fmt, exact } from '../format'
+
+/** A "Balance: X [Max]" row above an input. `prefix` lets it read e.g. "Available to borrow". */
+function BalanceRow({
+  prefix,
+  label,
+  balance,
+  decimals,
+  onMax,
+}: {
+  prefix?: string
+  label: string
+  balance?: bigint
+  decimals: number
+  onMax: () => void
+}) {
+  const { t } = useI18n()
+  return (
+    <div className="balrow">
+      <span>
+        {prefix ?? t('balance')}: {balance !== undefined ? `${fmt(balance, decimals)} ${label}` : '—'}
+      </span>
+      <button className="maxbtn" disabled={!balance} onClick={onMax}>
+        {t('max')}
+      </button>
+    </div>
+  )
+}
 
 function TxStatusLine({ status, message }: { status: string; message?: string }) {
   if (status === 'idle') return null
@@ -92,8 +120,24 @@ export function SubscribeRedeem() {
   const { t } = useI18n()
   const { address } = useAccount()
   const { state, run } = useTx()
+  const queryClient = useQueryClient()
   const [usdcIn, setUsdcIn] = useState('')
   const [rwaIn, setRwaIn] = useState('')
+
+  const { data: usdcBalance } = useReadContract({
+    address: d.usdc,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) && d.isDeployed, refetchInterval: 8000 },
+  })
+  const { data: tbillBalance } = useReadContract({
+    address: d.rwaToken,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) && d.isDeployed, refetchInterval: 8000 },
+  })
 
   const usdcAmt = safeParse(usdcIn, d.usdcDecimals)
   const rwaAmt = safeParse(rwaIn, d.rwaDecimals)
@@ -118,10 +162,18 @@ export function SubscribeRedeem() {
   async function subscribe() {
     const approved = await run({ address: d.usdc, abi: erc20Abi, functionName: 'approve', args: [d.subscriptionManager, usdcAmt] })
     if (approved?.status !== 'confirmed') return // don't fire the action if approve failed/was rejected
-    await run({ address: d.subscriptionManager, abi: subscriptionManagerAbi, functionName: 'subscribe', args: [usdcAmt] })
+    const r = await run({ address: d.subscriptionManager, abi: subscriptionManagerAbi, functionName: 'subscribe', args: [usdcAmt] })
+    if (r?.status === 'confirmed') {
+      setUsdcIn('')
+      queryClient.invalidateQueries()
+    }
   }
   async function redeem() {
-    await run({ address: d.subscriptionManager, abi: subscriptionManagerAbi, functionName: 'requestRedemption', args: [rwaAmt] })
+    const r = await run({ address: d.subscriptionManager, abi: subscriptionManagerAbi, functionName: 'requestRedemption', args: [rwaAmt] })
+    if (r?.status === 'confirmed') {
+      setRwaIn('')
+      queryClient.invalidateQueries()
+    }
   }
 
   return (
@@ -130,16 +182,28 @@ export function SubscribeRedeem() {
         {t('subredeem.label')}
         <Hint text={t('subredeem.hint')} />
       </div>
+      <BalanceRow
+        label="USDC"
+        balance={usdcBalance}
+        decimals={d.usdcDecimals}
+        onMax={() => setUsdcIn(usdcBalance ? exact(usdcBalance, d.usdcDecimals) : '')}
+      />
       <div className="row">
         <input placeholder={t('subredeem.usdcPh')} value={usdcIn} onChange={(e) => setUsdcIn(e.target.value)} />
         <button disabled={disabled || usdcAmt === 0n} onClick={subscribe}>{t('subredeem.subscribe')}</button>
       </div>
-      <div className="sub">{previewRwa !== undefined ? `→ ${formatUnits(previewRwa, d.rwaDecimals)} tBILL` : ''}</div>
+      <div className="sub">{previewRwa !== undefined ? `→ ${fmt(previewRwa, d.rwaDecimals)} tBILL` : ''}</div>
+      <BalanceRow
+        label="tBILL"
+        balance={tbillBalance}
+        decimals={d.rwaDecimals}
+        onMax={() => setRwaIn(tbillBalance ? exact(tbillBalance, d.rwaDecimals) : '')}
+      />
       <div className="row">
         <input placeholder={t('subredeem.tbillPh')} value={rwaIn} onChange={(e) => setRwaIn(e.target.value)} />
         <button disabled={disabled || rwaAmt === 0n} onClick={redeem}>{t('subredeem.requestRedeem')}</button>
       </div>
-      <div className="sub">{previewUsdc !== undefined ? `→ $${formatUnits(previewUsdc, d.usdcDecimals)} ${t('subredeem.settlesTN')}` : ''}</div>
+      <div className="sub">{previewUsdc !== undefined ? `→ $${fmt(previewUsdc, d.usdcDecimals)} ${t('subredeem.settlesTN')}` : ''}</div>
       <PendingRedemptions />
       <TxStatusLine status={state.status} message={state.error?.message} />
     </div>
@@ -151,8 +215,17 @@ export function BorrowPanel() {
   const { address } = useAccount()
   const publicClient = usePublicClient()
   const { state, run } = useTx()
+  const queryClient = useQueryClient()
   const [collIn, setCollIn] = useState('')
   const [borrowIn, setBorrowIn] = useState('')
+
+  const { data: tbillBalance } = useReadContract({
+    address: d.rwaToken,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) && d.isDeployed, refetchInterval: 8000 },
+  })
 
   const marketId = useMemo(() => computeMarketId(d.marketParams), [])
 
@@ -184,23 +257,35 @@ export function BorrowPanel() {
   const borrowAmt = safeParse(borrowIn, d.usdcDecimals)
   const disabled = !address || !d.isDeployed
 
+  // spare borrowing power (USDC units), with a 5% margin so a Max-borrow keeps HF > 1
+  const spareBorrow = health && health.weightedCollateral > health.debt ? health.weightedCollateral - health.debt : 0n
+  const maxBorrow = (spareBorrow * 95n) / 100n
+
   async function supplyCollateral() {
     const approved = await run({ address: d.rwaToken, abi: erc20Abi, functionName: 'approve', args: [d.morpho, collAmt] })
     if (approved?.status !== 'confirmed') return
-    await run({
+    const r = await run({
       address: d.morpho,
       abi: morphoAbi,
       functionName: 'supplyCollateral',
       args: [d.marketParams, collAmt, address as `0x${string}`, '0x'],
     })
+    if (r?.status === 'confirmed') {
+      setCollIn('')
+      queryClient.invalidateQueries()
+    }
   }
   async function borrow() {
-    await run({
+    const r = await run({
       address: d.morpho,
       abi: morphoAbi,
       functionName: 'borrow',
       args: [d.marketParams, borrowAmt, 0n, address as `0x${string}`, address as `0x${string}`],
     })
+    if (r?.status === 'confirmed') {
+      setBorrowIn('')
+      queryClient.invalidateQueries()
+    }
   }
 
   return (
@@ -212,13 +297,26 @@ export function BorrowPanel() {
       </div>
       <div className="sub">
         {health
-          ? `${t('borrow.collateral')} ${formatUnits(health.collateral, d.rwaDecimals)} tBILL · ${t('borrow.debt')} $${formatUnits(health.debt, d.usdcDecimals)}`
+          ? `${t('borrow.collateral')} ${fmt(health.collateral, d.rwaDecimals)} tBILL · ${t('borrow.debt')} $${fmt(health.debt, d.usdcDecimals)}`
           : t('borrow.noPosition')}
       </div>
+      <BalanceRow
+        label="tBILL"
+        balance={tbillBalance}
+        decimals={d.rwaDecimals}
+        onMax={() => setCollIn(tbillBalance ? exact(tbillBalance, d.rwaDecimals) : '')}
+      />
       <div className="row">
         <input placeholder={t('borrow.collateralPh')} value={collIn} onChange={(e) => setCollIn(e.target.value)} />
         <button disabled={disabled || collAmt === 0n} onClick={supplyCollateral}>{t('borrow.supply')}</button>
       </div>
+      <BalanceRow
+        prefix={t('borrow.available')}
+        label="USDC"
+        balance={maxBorrow}
+        decimals={d.usdcDecimals}
+        onMax={() => setBorrowIn(maxBorrow > 0n ? exact(maxBorrow, d.usdcDecimals) : '')}
+      />
       <div className="row">
         <input placeholder={t('borrow.borrowPh')} value={borrowIn} onChange={(e) => setBorrowIn(e.target.value)} />
         <button disabled={disabled || borrowAmt === 0n} onClick={borrow}>{t('borrow.borrow')}</button>
