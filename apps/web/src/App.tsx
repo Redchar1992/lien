@@ -1,7 +1,10 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { KycBadge, NavCard, PortfolioCard } from './components/Widgets'
+import { KycBadge, NavCard, PortfolioCard, StatsBar } from './components/Widgets'
 import { SubscribeRedeem, BorrowPanel } from './components/Actions'
 import { deployment as d } from './deployments'
+
+const REPO = 'https://github.com/Redchar1992/lien'
+const EXPLORER = 'https://sepolia.basescan.org/address/'
 
 export function App() {
   return (
@@ -17,6 +20,14 @@ export function App() {
         </div>
       </header>
 
+      <div className="subbar">
+        <span className="chip">Base Sepolia · testnet</span>
+        <span className="dot">·</span>
+        <a className="link" href={REPO} target="_blank" rel="noreferrer">GitHub ↗</a>
+        <a className="link" href={`${EXPLORER}${d.morpho}`} target="_blank" rel="noreferrer">contracts ↗</a>
+        <span className="subbar-note">RWA credit: subscribe → use as collateral → borrow → liquidation, all on-chain & permissioned.</span>
+      </div>
+
       {!d.isDeployed && (
         <div className="banner">
           Contracts not yet deployed. This UI is wired to the M5 Base Sepolia deployment — set
@@ -24,16 +35,36 @@ export function App() {
         </div>
       )}
 
-      <main className="grid">
-        <NavCard />
-        <PortfolioCard />
-        <SubscribeRedeem />
-        <BorrowPanel />
-      </main>
+      <StatsBar />
+
+      <section className="section">
+        <div className="section-title">Your account</div>
+        <div className="grid">
+          <NavCard />
+          <PortfolioCard />
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-title">Actions</div>
+        <div className="grid">
+          <SubscribeRedeem />
+          <BorrowPanel />
+        </div>
+      </section>
 
       <footer className="foot">
-        EVM-native (viem/wagmi). The tx-lifecycle SDK is ported from the TRON sibling — same
-        state machine + error taxonomy, TronWeb→viem is an interface swap.
+        <p>
+          EVM-native (viem/wagmi). The tx-lifecycle SDK is ported from the TRON sibling — same
+          state machine + error taxonomy; TronWeb→viem is an interface swap, not a rewrite.
+        </p>
+        <p className="foot-links">
+          <a href={REPO} target="_blank" rel="noreferrer">source</a>
+          <a href={`${EXPLORER}${d.subscriptionManager}`} target="_blank" rel="noreferrer">SubscriptionManager</a>
+          <a href={`${EXPLORER}${d.morpho}`} target="_blank" rel="noreferrer">Morpho engine</a>
+          <a href={`${EXPLORER}${d.liquidationRouter}`} target="_blank" rel="noreferrer">LiquidationRouter</a>
+          <a href={`${EXPLORER}${d.navOracle}`} target="_blank" rel="noreferrer">NavOracle</a>
+        </p>
       </footer>
     </div>
   )

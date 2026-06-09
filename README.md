@@ -52,8 +52,11 @@ The depositor journey, and the mechanism behind each step:
    USDC. So liquidation stays permissionless and capital-free even though the collateral
    itself can only be held by verified addresses. (Three designs are compared in the
    [ADRs](contracts/docs/合规设计.md).)
-6. **Redeem.** Burn `tBILL` → USDC at NAV, paid out after a **T+N** settlement delay (like a
-   real fund — redemptions queue, they don't settle instantly).
+6. **Redeem.** Burn `tBILL` → the USDC owed is locked at the current NAV and **queued**; after
+   a **T+N** settlement delay you `claim` it (real funds settle on a schedule, not instantly).
+   The UI surfaces your pending redemptions with a live countdown and a Claim button that
+   unlocks once settled — and `withdrawProceeds` can never dip into the reserve backing those
+   queued claims.
 7. **Or deposit into the curated vault.** Prefer hands-off, diversified exposure?
    `LienVault` (ERC-4626, MetaMorpho-style) takes your USDC and a curator allocates it
    across multiple isolated RWA markets under per-market caps; yield accrues to depositors.

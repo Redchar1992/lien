@@ -1,6 +1,6 @@
 import { useAccount, useReadContract } from 'wagmi'
 import { erc20Abi, formatUnits } from 'viem'
-import { identityRegistryAbi, navOracleAbi } from '@lien/sdk'
+import { computeMarketId, identityRegistryAbi, morphoAbi, navOracleAbi } from '@lien/sdk'
 import { deployment as d } from '../deployments'
 import { Hint } from './Hint'
 
@@ -85,6 +85,44 @@ export function PortfolioCard() {
       </div>
       <div className="value">{balance !== undefined ? `${formatUnits(balance, d.rwaDecimals)} tBILL` : '—'}</div>
       <div className="sub">{usdValueWad !== undefined ? `≈ $${formatUnits(usdValueWad, 18)}` : ''}</div>
+    </div>
+  )
+}
+
+/** A strip of live protocol stats above the action cards. */
+export function StatsBar() {
+  const marketId = computeMarketId(d.marketParams)
+  const { data: market } = useReadContract({
+    address: d.morpho,
+    abi: morphoAbi,
+    functionName: 'market',
+    args: [marketId],
+    query: { enabled: d.isDeployed, refetchInterval: 15_000 },
+  })
+  const { data: supply } = useReadContract({
+    address: d.rwaToken,
+    abi: erc20Abi,
+    functionName: 'totalSupply',
+    query: { enabled: d.isDeployed, refetchInterval: 15_000 },
+  })
+  const m = market as readonly bigint[] | undefined
+  const liquidity = m ? m[0] - m[2] : undefined // totalSupply − totalBorrow = available USDC
+  const ltvPct = Number(d.marketParams.lltv / 10n ** 16n)
+
+  return (
+    <div className="stats">
+      <div className="stat">
+        <div className="stat-label">Available market liquidity</div>
+        <div className="stat-value">{liquidity !== undefined ? `$${formatUnits(liquidity, d.usdcDecimals)}` : '—'}</div>
+      </div>
+      <div className="stat">
+        <div className="stat-label">tBILL outstanding</div>
+        <div className="stat-value">{supply !== undefined ? `${formatUnits(supply, d.rwaDecimals)}` : '—'}</div>
+      </div>
+      <div className="stat">
+        <div className="stat-label">Max loan-to-value</div>
+        <div className="stat-value">{ltvPct}%</div>
+      </div>
     </div>
   )
 }
