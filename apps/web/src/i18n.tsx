@@ -81,6 +81,40 @@ export const DICT = {
   balance: { en: 'Balance', zh: '餘額' },
   max: { en: 'Max', zh: '最大' },
   'borrow.available': { en: 'Available to borrow', zh: '可借額度' },
+  'hero.headline': { en: 'Borrow against real-world assets — without selling them.', zh: '以真實資產借款 —— 無需賣出。' },
+  'hero.sub': {
+    en: 'lien tokenizes real-world assets like T-bills and lets you use them as compliant, on-chain collateral to borrow stablecoins — while they keep earning yield.',
+    zh: 'lien 將國債等真實資產代幣化,讓你把它們作為合規的鏈上抵押品借出穩定幣 —— 同時資產持續產生收益。',
+  },
+  'hero.noun': { en: 'noun', zh: '名詞' },
+  'hero.def': {
+    en: "a creditor's legal right to keep possession of an asset as security for a debt. Here, the protocol holds a lien on your tokenized asset while you borrow against it.",
+    zh: '債權人對資產持有的法定留置權,作為債務的擔保。在這裡,協議在你借款期間對你的代幣化資產取得留置權。',
+  },
+  'how.title': { en: 'How it works', zh: '運作方式' },
+  'how.s1t': { en: 'Subscribe', zh: '申購' },
+  'how.s1d': {
+    en: 'Deposit USDC and receive tBILL — a tokenized T-bill share that accrues yield as its NAV rises.',
+    zh: '存入 USDC,獲得 tBILL —— 代幣化的國債份額,其 NAV 上升即代表收益。',
+  },
+  'how.s2t': { en: 'Collateralize', zh: '抵押' },
+  'how.s2d': {
+    en: 'Lock your tBILL as collateral. It keeps earning while it backs your loan.',
+    zh: '將 tBILL 鎖為抵押品。它在擔保借款的同時持續產生收益。',
+  },
+  'how.s3t': { en: 'Borrow', zh: '借款' },
+  'how.s3d': {
+    en: 'Draw USDC against it without selling. Repay anytime; your Health Factor shows how safe you are.',
+    zh: '在不賣出的情況下借出 USDC。隨時可還款;健康因子顯示你的安全程度。',
+  },
+  'hf.hint': {
+    en: 'Health Factor = (collateral value × max LTV) ÷ debt. Above 1.0 is safe; the closer to 1.0 the riskier; below 1.0 the position can be liquidated.',
+    zh: '健康因子(Health Factor)=(抵押價值 × 最大抵押率)÷ 債務。高於 1.0 安全;越接近 1.0 越危險;低於 1.0 部位可被清算。',
+  },
+  'footer.sdkHint': {
+    en: 'In plain terms: the part of the app that submits blockchain transactions was first built for the TRON network, then moved here to Ethereum-style chains by swapping only the wallet library — proof the same codebase works across very different chains.',
+    zh: '白話:應用中負責送出區塊鏈交易的部分,最初是為 TRON 網路寫的,後來只替換了錢包函式庫就搬到以太坊系的鏈上 —— 證明同一套程式碼能跨越差異很大的鏈運作。',
+  },
 }
 
 export type I18nKey = keyof typeof DICT

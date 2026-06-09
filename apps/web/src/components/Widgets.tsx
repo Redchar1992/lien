@@ -135,8 +135,20 @@ export function StatsBar() {
 
 export function HealthGauge({ hfWad, debt }: { hfWad: bigint; debt: bigint }) {
   const { t } = useI18n()
-  if (debt === 0n) return <span className="badge ok">{t('health.noDebt')}</span>
+  if (debt === 0n) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <span className="badge ok">{t('health.noDebt')}</span>
+        <Hint text={t('hf.hint')} />
+      </span>
+    )
+  }
   const hf = Number(hfWad) / 1e18
   const cls = hf >= 1.5 ? 'ok' : hf >= 1.1 ? 'warn' : 'danger'
-  return <span className={`badge ${cls}`}>HF {hf.toFixed(3)}</span>
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <span className={`badge ${cls}`}>HF {hf.toFixed(3)}</span>
+      <Hint text={t('hf.hint')} />
+    </span>
+  )
 }

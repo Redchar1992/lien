@@ -1,6 +1,8 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { KycBadge, NavCard, PortfolioCard, StatsBar } from './components/Widgets'
 import { SubscribeRedeem, BorrowPanel } from './components/Actions'
+import { Hero, HowItWorks } from './components/Hero'
+import { Hint } from './components/Hint'
 import { deployment as d } from './deployments'
 import { useI18n } from './i18n'
 
@@ -25,19 +27,17 @@ export function App() {
         </div>
       </header>
 
+      <Hero />
+      <HowItWorks />
+
       <div className="subbar">
         <span className="chip">Base Sepolia · testnet</span>
         <span className="dot">·</span>
         <a className="link" href={REPO} target="_blank" rel="noreferrer">GitHub ↗</a>
         <a className="link" href={`${EXPLORER}${d.morpho}`} target="_blank" rel="noreferrer">{t('subbar.contracts')}</a>
-        <span className="subbar-note">{t('subbar.note')}</span>
       </div>
 
-      {!d.isDeployed && (
-        <div className="banner">
-          {t('banner')}
-        </div>
-      )}
+      {!d.isDeployed && <div className="banner">{t('banner')}</div>}
 
       <StatsBar />
 
@@ -58,7 +58,10 @@ export function App() {
       </section>
 
       <footer className="foot">
-        <p>{t('footer.sdk')}</p>
+        <p>
+          {t('footer.sdk')}
+          <Hint text={t('footer.sdkHint')} />
+        </p>
         <p className="foot-links">
           <a href={REPO} target="_blank" rel="noreferrer">{t('footer.source')}</a>
           <a href={`${EXPLORER}${d.subscriptionManager}`} target="_blank" rel="noreferrer">SubscriptionManager</a>
