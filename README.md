@@ -27,6 +27,40 @@ on the tokenized asset.
 - **Isolated lending core, reused.** The market is built on a vendored Morpho Blue
   engine, so the work concentrates on the RWA differentiators above.
 
+## How it works
+
+The depositor journey, and the mechanism behind each step:
+
+1. **Get allowlisted.** The RWA token (`tBILL`) is *permissioned* — an agent KYC-verifies
+   your address in the `IdentityRegistry`. Only verified addresses may hold or receive it
+   (enforced on-chain in the token's transfer hook, ERC-3643-style).
+2. **Subscribe.** Deposit USDC → the `SubscriptionManager` mints `tBILL` at the current
+   **NAV** (Net Asset Value per share, pushed on-chain by the `NavOracle`). Decimals are
+   handled explicitly (6-dec USDC ↔ 18-dec tBILL ↔ 1e18 NAV), rounding in the protocol's
+   favor.
+3. **Earn yield.** Yield accrues as NAV rises above $1.00 (e.g. a T-bill accruing interest) —
+   your position's USD value grows without any token rebasing.
+4. **Borrow against it.** Post `tBILL` as collateral in the isolated lending market (a
+   vendored Morpho Blue engine) and **borrow USDC without selling** — the protocol takes a
+   *lien* on your tokenized asset. The **Health Factor** = LTV-weighted collateral ÷ debt;
+   above 1.0 is safe, below 1.0 is liquidatable. The NAV→Morpho oracle adapter is
+   **fail-safe**: a stale/circuit-broken NAV freezes the market rather than pricing off a
+   dead feed.
+5. **Liquidation of permissioned collateral.** If a position goes underwater, anyone can
+   liquidate it through the `LiquidationRouter` — a KYC'd contract with a USDC buffer that
+   receives the seized `tBILL`, fronts the repayment, and pays the keeper the incentive in
+   USDC. So liquidation stays permissionless and capital-free even though the collateral
+   itself can only be held by verified addresses. (Three designs are compared in the
+   [ADRs](contracts/docs/合规设计.md).)
+6. **Redeem.** Burn `tBILL` → USDC at NAV, paid out after a **T+N** settlement delay (like a
+   real fund — redemptions queue, they don't settle instantly).
+7. **Or deposit into the curated vault.** Prefer hands-off, diversified exposure?
+   `LienVault` (ERC-4626, MetaMorpho-style) takes your USDC and a curator allocates it
+   across multiple isolated RWA markets under per-market caps; yield accrues to depositors.
+
+Every privileged/agent action emits an auditable event; the trust boundary is documented
+honestly rather than hidden.
+
 ## Architecture
 
 ```
