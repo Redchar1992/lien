@@ -76,3 +76,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .card:hover { border-color: #2c3647; }
 .foot-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; }
 @media (max-width: 720px) { .stats { grid-template-columns: 1fr; } .grid { grid-template-columns: 1fr; } .subbar-note { margin-left: 0; flex-basis: 100%; } }
+
+/* language toggle */
+.lang-toggle { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.lang-toggle:hover { color: var(--accent); border-color: var(--accent); }

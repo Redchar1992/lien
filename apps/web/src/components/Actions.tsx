@@ -7,6 +7,7 @@ import { deployment as d } from '../deployments'
 import { useTx } from '../tx'
 import { HealthGauge } from './Widgets'
 import { Hint } from './Hint'
+import { useI18n } from '../i18n'
 
 function TxStatusLine({ status, message }: { status: string; message?: string }) {
   if (status === 'idle') return null
@@ -21,6 +22,7 @@ interface PendingItem {
 
 /** The user's queued redemptions + a Claim button (enabled once the T+N delay passes). */
 function PendingRedemptions() {
+  const { t } = useI18n()
   const { address } = useAccount()
   const publicClient = usePublicClient()
   const { state, run } = useTx()
@@ -68,16 +70,16 @@ function PendingRedemptions() {
 
   return (
     <div className="pending">
-      <div className="sub">Pending redemptions (T+N queue):</div>
+      <div className="sub">{t('pending.title')}</div>
       {pending.map((p) => {
         const ready = now >= p.claimableAt
         const secs = Math.max(0, p.claimableAt - now)
         return (
           <div className="row" key={p.id}>
             <span className="sub">
-              ${formatUnits(p.usdcOwed, d.usdcDecimals)} USDC · {ready ? 'ready to claim' : `claimable in ~${secs}s`}
+              ${formatUnits(p.usdcOwed, d.usdcDecimals)} USDC · {ready ? t('pending.ready') : `${t('pending.claimableIn')} ~${secs}s`}
             </span>
-            <button disabled={!ready} onClick={() => claim(p.id)}>Claim</button>
+            <button disabled={!ready} onClick={() => claim(p.id)}>{t('pending.claim')}</button>
           </div>
         )
       })}
@@ -87,6 +89,7 @@ function PendingRedemptions() {
 }
 
 export function SubscribeRedeem() {
+  const { t } = useI18n()
   const { address } = useAccount()
   const { state, run } = useTx()
   const [usdcIn, setUsdcIn] = useState('')
@@ -124,19 +127,19 @@ export function SubscribeRedeem() {
   return (
     <div className="card">
       <div className="label">
-        Subscribe / Redeem
-        <Hint text="Primary market. Subscribe: deposit USDC → mint tBILL at the current NAV. Redeem: burn tBILL → USDC at NAV, paid out after a T+N settlement delay (like a real fund — not instant)." />
+        {t('subredeem.label')}
+        <Hint text={t('subredeem.hint')} />
       </div>
       <div className="row">
-        <input placeholder="USDC amount" value={usdcIn} onChange={(e) => setUsdcIn(e.target.value)} />
-        <button disabled={disabled || usdcAmt === 0n} onClick={subscribe}>Subscribe</button>
+        <input placeholder={t('subredeem.usdcPh')} value={usdcIn} onChange={(e) => setUsdcIn(e.target.value)} />
+        <button disabled={disabled || usdcAmt === 0n} onClick={subscribe}>{t('subredeem.subscribe')}</button>
       </div>
       <div className="sub">{previewRwa !== undefined ? `→ ${formatUnits(previewRwa, d.rwaDecimals)} tBILL` : ''}</div>
       <div className="row">
-        <input placeholder="tBILL amount" value={rwaIn} onChange={(e) => setRwaIn(e.target.value)} />
-        <button disabled={disabled || rwaAmt === 0n} onClick={redeem}>Request redeem</button>
+        <input placeholder={t('subredeem.tbillPh')} value={rwaIn} onChange={(e) => setRwaIn(e.target.value)} />
+        <button disabled={disabled || rwaAmt === 0n} onClick={redeem}>{t('subredeem.requestRedeem')}</button>
       </div>
-      <div className="sub">{previewUsdc !== undefined ? `→ $${formatUnits(previewUsdc, d.usdcDecimals)} (settles T+N)` : ''}</div>
+      <div className="sub">{previewUsdc !== undefined ? `→ $${formatUnits(previewUsdc, d.usdcDecimals)} ${t('subredeem.settlesTN')}` : ''}</div>
       <PendingRedemptions />
       <TxStatusLine status={state.status} message={state.error?.message} />
     </div>
@@ -144,6 +147,7 @@ export function SubscribeRedeem() {
 }
 
 export function BorrowPanel() {
+  const { t } = useI18n()
   const { address } = useAccount()
   const publicClient = usePublicClient()
   const { state, run } = useTx()
@@ -202,22 +206,22 @@ export function BorrowPanel() {
   return (
     <div className="card">
       <div className="label">
-        Borrow against RWA
-        <Hint text="Borrow USDC against your tBILL without selling it — the protocol takes a lien on the collateral. HF (Health Factor) = LTV-weighted collateral ÷ debt. Above 1.0 is safe; below 1.0 can be liquidated. Supplying collateral raises it; borrowing lowers it." />
+        {t('borrow.label')}
+        <Hint text={t('borrow.hint')} />
         {health ? <HealthGauge hfWad={health.healthFactorWad} debt={health.debt} /> : null}
       </div>
       <div className="sub">
         {health
-          ? `collateral ${formatUnits(health.collateral, d.rwaDecimals)} tBILL · debt $${formatUnits(health.debt, d.usdcDecimals)}`
-          : 'no position'}
+          ? `${t('borrow.collateral')} ${formatUnits(health.collateral, d.rwaDecimals)} tBILL · ${t('borrow.debt')} $${formatUnits(health.debt, d.usdcDecimals)}`
+          : t('borrow.noPosition')}
       </div>
       <div className="row">
-        <input placeholder="tBILL collateral" value={collIn} onChange={(e) => setCollIn(e.target.value)} />
-        <button disabled={disabled || collAmt === 0n} onClick={supplyCollateral}>Supply collateral</button>
+        <input placeholder={t('borrow.collateralPh')} value={collIn} onChange={(e) => setCollIn(e.target.value)} />
+        <button disabled={disabled || collAmt === 0n} onClick={supplyCollateral}>{t('borrow.supply')}</button>
       </div>
       <div className="row">
-        <input placeholder="USDC to borrow" value={borrowIn} onChange={(e) => setBorrowIn(e.target.value)} />
-        <button disabled={disabled || borrowAmt === 0n} onClick={borrow}>Borrow</button>
+        <input placeholder={t('borrow.borrowPh')} value={borrowIn} onChange={(e) => setBorrowIn(e.target.value)} />
+        <button disabled={disabled || borrowAmt === 0n} onClick={borrow}>{t('borrow.borrow')}</button>
       </div>
       <TxStatusLine status={state.status} message={state.error?.message} />
     </div>

@@ -2,19 +2,24 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { KycBadge, NavCard, PortfolioCard, StatsBar } from './components/Widgets'
 import { SubscribeRedeem, BorrowPanel } from './components/Actions'
 import { deployment as d } from './deployments'
+import { useI18n } from './i18n'
 
 const REPO = 'https://github.com/Redchar1992/lien'
 const EXPLORER = 'https://sepolia.basescan.org/address/'
 
 export function App() {
+  const { lang, setLang, t } = useI18n()
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">
           <span className="logo">lien</span>
-          <span className="tagline">tokenized RWA you can borrow against</span>
+          <span className="tagline">{t('tagline')}</span>
         </div>
         <div className="topbar-right">
+          <button className="lang-toggle" onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}>
+            {lang === 'en' ? '繁中' : 'EN'}
+          </button>
           <KycBadge />
           <ConnectButton />
         </div>
@@ -24,21 +29,20 @@ export function App() {
         <span className="chip">Base Sepolia · testnet</span>
         <span className="dot">·</span>
         <a className="link" href={REPO} target="_blank" rel="noreferrer">GitHub ↗</a>
-        <a className="link" href={`${EXPLORER}${d.morpho}`} target="_blank" rel="noreferrer">contracts ↗</a>
-        <span className="subbar-note">RWA credit: subscribe → use as collateral → borrow → liquidation, all on-chain & permissioned.</span>
+        <a className="link" href={`${EXPLORER}${d.morpho}`} target="_blank" rel="noreferrer">{t('subbar.contracts')}</a>
+        <span className="subbar-note">{t('subbar.note')}</span>
       </div>
 
       {!d.isDeployed && (
         <div className="banner">
-          Contracts not yet deployed. This UI is wired to the M5 Base Sepolia deployment — set
-          addresses in <code>src/deployments.ts</code> (filled automatically by the deploy script).
+          {t('banner')}
         </div>
       )}
 
       <StatsBar />
 
       <section className="section">
-        <div className="section-title">Your account</div>
+        <div className="section-title">{t('section.account')}</div>
         <div className="grid">
           <NavCard />
           <PortfolioCard />
@@ -46,7 +50,7 @@ export function App() {
       </section>
 
       <section className="section">
-        <div className="section-title">Actions</div>
+        <div className="section-title">{t('section.actions')}</div>
         <div className="grid">
           <SubscribeRedeem />
           <BorrowPanel />
@@ -54,12 +58,9 @@ export function App() {
       </section>
 
       <footer className="foot">
-        <p>
-          EVM-native (viem/wagmi). The tx-lifecycle SDK is ported from the TRON sibling — same
-          state machine + error taxonomy; TronWeb→viem is an interface swap, not a rewrite.
-        </p>
+        <p>{t('footer.sdk')}</p>
         <p className="foot-links">
-          <a href={REPO} target="_blank" rel="noreferrer">source</a>
+          <a href={REPO} target="_blank" rel="noreferrer">{t('footer.source')}</a>
           <a href={`${EXPLORER}${d.subscriptionManager}`} target="_blank" rel="noreferrer">SubscriptionManager</a>
           <a href={`${EXPLORER}${d.morpho}`} target="_blank" rel="noreferrer">Morpho engine</a>
           <a href={`${EXPLORER}${d.liquidationRouter}`} target="_blank" rel="noreferrer">LiquidationRouter</a>
