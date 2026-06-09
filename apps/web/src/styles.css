@@ -107,3 +107,13 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .step-title { font-weight: 700; margin-bottom: 4px; }
 .step-desc { color: var(--muted); font-size: 13px; line-height: 1.5; }
 @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } .hero h1 { font-size: 23px; } }
+
+/* hero animated art */
+.hero { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: center; }
+.hero-text { position: relative; z-index: 1; }
+.hero-art { justify-self: end; width: 280px; max-width: 100%; }
+.hero-art-svg { width: 100%; height: auto; display: block; }
+.chain { transform-origin: 140px 97px; animation: lien-breathe 5s ease-in-out infinite; }
+@keyframes lien-breathe { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; } .hero-art { display: none; } }
+@media (prefers-reduced-motion: reduce) { .chain { animation: none; } .flowdots { display: none; } }
