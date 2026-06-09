@@ -21,6 +21,19 @@ export const subscriptionManagerAbi = [
   { type: 'function', name: 'previewSubscribe', stateMutability: 'view', inputs: [{ name: 'usdcAmount', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
   { type: 'function', name: 'previewRedeem', stateMutability: 'view', inputs: [{ name: 'rwaAmount', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
   { type: 'function', name: 'settlementDelay', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { type: 'function', name: 'requestsLength', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  {
+    type: 'function',
+    name: 'requests',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'uint256' }],
+    outputs: [
+      { name: 'user', type: 'address' },
+      { name: 'usdcOwed', type: 'uint256' },
+      { name: 'claimableAt', type: 'uint64' },
+      { name: 'claimed', type: 'bool' },
+    ],
+  },
 ] as const
 
 // MarketParams tuple shared by the Morpho write methods.

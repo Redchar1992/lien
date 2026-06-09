@@ -13,6 +13,79 @@ function TxStatusLine({ status, message }: { status: string; message?: string })
   return <div className={`txline ${status}`}>{status}{message ? ` · ${message}` : ''}</div>
 }
 
+interface PendingItem {
+  id: number
+  usdcOwed: bigint
+  claimableAt: number
+}
+
+/** The user's queued redemptions + a Claim button (enabled once the T+N delay passes). */
+function PendingRedemptions() {
+  const { address } = useAccount()
+  const publicClient = usePublicClient()
+  const { state, run } = useTx()
+
+  const { data: pending, refetch } = useQuery({
+    queryKey: ['pending-redemptions', address],
+    enabled: Boolean(address) && d.isDeployed && Boolean(publicClient),
+    refetchInterval: 5000,
+    queryFn: async (): Promise<PendingItem[]> => {
+      const client = publicClient as unknown as PublicClient
+      const len = (await client.readContract({
+        address: d.subscriptionManager,
+        abi: subscriptionManagerAbi,
+        functionName: 'requestsLength',
+      })) as bigint
+      const items: PendingItem[] = []
+      for (let i = 0n; i < len; i++) {
+        const r = (await client.readContract({
+          address: d.subscriptionManager,
+          abi: subscriptionManagerAbi,
+          functionName: 'requests',
+          args: [i],
+        })) as readonly [`0x${string}`, bigint, bigint, boolean]
+        const [user, usdcOwed, claimableAt, claimed] = r
+        if (!claimed && user.toLowerCase() === (address as string).toLowerCase()) {
+          items.push({ id: Number(i), usdcOwed, claimableAt: Number(claimableAt) })
+        }
+      }
+      return items
+    },
+  })
+
+  if (!pending || pending.length === 0) return null
+  const now = Math.floor(Date.now() / 1000)
+
+  async function claim(id: number) {
+    const r = await run({
+      address: d.subscriptionManager,
+      abi: subscriptionManagerAbi,
+      functionName: 'claimRedemption',
+      args: [BigInt(id)],
+    })
+    if (r?.status === 'confirmed') refetch()
+  }
+
+  return (
+    <div className="pending">
+      <div className="sub">Pending redemptions (T+N queue):</div>
+      {pending.map((p) => {
+        const ready = now >= p.claimableAt
+        const secs = Math.max(0, p.claimableAt - now)
+        return (
+          <div className="row" key={p.id}>
+            <span className="sub">
+              ${formatUnits(p.usdcOwed, d.usdcDecimals)} USDC · {ready ? 'ready to claim' : `claimable in ~${secs}s`}
+            </span>
+            <button disabled={!ready} onClick={() => claim(p.id)}>Claim</button>
+          </div>
+        )
+      })}
+      <TxStatusLine status={state.status} message={state.error?.message} />
+    </div>
+  )
+}
+
 export function SubscribeRedeem() {
   const { address } = useAccount()
   const { state, run } = useTx()
@@ -64,6 +137,7 @@ export function SubscribeRedeem() {
         <button disabled={disabled || rwaAmt === 0n} onClick={redeem}>Request redeem</button>
       </div>
       <div className="sub">{previewUsdc !== undefined ? `→ $${formatUnits(previewUsdc, d.usdcDecimals)} (settles T+N)` : ''}</div>
+      <PendingRedemptions />
       <TxStatusLine status={state.status} message={state.error?.message} />
     </div>
   )
