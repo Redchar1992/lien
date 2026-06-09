@@ -6,6 +6,7 @@ import { computeMarketId, morphoAbi, navOracleAbi, readPositionHealth, subscript
 import { deployment as d } from '../deployments'
 import { useTx } from '../tx'
 import { HealthGauge } from './Widgets'
+import { Hint } from './Hint'
 
 function TxStatusLine({ status, message }: { status: string; message?: string }) {
   if (status === 'idle') return null
@@ -49,7 +50,10 @@ export function SubscribeRedeem() {
 
   return (
     <div className="card">
-      <div className="label">Subscribe / Redeem</div>
+      <div className="label">
+        Subscribe / Redeem
+        <Hint text="Primary market. Subscribe: deposit USDC → mint tBILL at the current NAV. Redeem: burn tBILL → USDC at NAV, paid out after a T+N settlement delay (like a real fund — not instant)." />
+      </div>
       <div className="row">
         <input placeholder="USDC amount" value={usdcIn} onChange={(e) => setUsdcIn(e.target.value)} />
         <button disabled={disabled || usdcAmt === 0n} onClick={subscribe}>Subscribe</button>
@@ -123,7 +127,11 @@ export function BorrowPanel() {
 
   return (
     <div className="card">
-      <div className="label">Borrow against RWA {health ? <HealthGauge hfWad={health.healthFactorWad} debt={health.debt} /> : null}</div>
+      <div className="label">
+        Borrow against RWA
+        <Hint text="Borrow USDC against your tBILL without selling it — the protocol takes a lien on the collateral. HF (Health Factor) = LTV-weighted collateral ÷ debt. Above 1.0 is safe; below 1.0 can be liquidated. Supplying collateral raises it; borrowing lowers it." />
+        {health ? <HealthGauge hfWad={health.healthFactorWad} debt={health.debt} /> : null}
+      </div>
       <div className="sub">
         {health
           ? `collateral ${formatUnits(health.collateral, d.rwaDecimals)} tBILL · debt $${formatUnits(health.debt, d.usdcDecimals)}`

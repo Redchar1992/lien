@@ -37,3 +37,21 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .txline.confirmed { color: var(--ok); }
 .txline.failed { color: var(--danger); }
 .foot { color: var(--muted); font-size: 12px; margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* inline hint tooltips */
+.hint { position: relative; display: inline-flex; vertical-align: middle; margin-left: 6px; cursor: help; outline: none; }
+.hint-icon {
+  font-size: 10px; font-weight: 700; font-style: italic; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; width: 15px; height: 15px;
+  display: inline-flex; align-items: center; justify-content: center; line-height: 1;
+}
+.hint:hover .hint-icon, .hint:focus .hint-icon { color: var(--accent); border-color: var(--accent); }
+.hint-text {
+  position: absolute; top: 145%; left: 50%; transform: translateX(-50%);
+  width: 250px; max-width: 60vw; background: #0e131b; border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 11px; font-size: 12px; font-weight: 400; font-style: normal;
+  color: var(--text); line-height: 1.5; text-align: left; white-space: normal;
+  opacity: 0; pointer-events: none; transition: opacity .12s ease; z-index: 20;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.hint:hover .hint-text, .hint:focus .hint-text { opacity: 1; }
