@@ -83,6 +83,7 @@ export function HowItWorks() {
             <div className="step-num">{i + 1}</div>
             <div className="step-title">{s.title}</div>
             <div className="step-desc">{s.desc}</div>
+            <span className="step-cue">{t('how.go')}</span>
           </a>
         ))}
       </div>

@@ -127,3 +127,10 @@ html { scroll-behavior: smooth; }
 .step:hover { transform: translateY(-2px); }
 .step::after { content: '→'; position: absolute; top: 14px; right: 14px; color: var(--muted); opacity: 0; transition: opacity .15s ease, color .15s ease; }
 .step:hover::after { opacity: .8; color: var(--accent); }
+
+/* make how-it-works steps read as clickable at rest */
+.step { background: linear-gradient(180deg, var(--panel), #121722); }
+.step::after { opacity: .42; }                 /* arrow always visible (dimmed) */
+.step:hover { border-color: rgba(106,160,255,0.55); background: rgba(106,160,255,0.05); }
+.step:hover::after { opacity: 1; }
+.step-cue { display: block; margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--accent); }

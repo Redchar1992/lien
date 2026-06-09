@@ -120,6 +120,7 @@ export const DICT = {
     zh: '應用中負責送出區塊鏈交易的部分,最初為 TRON 網路而寫;搬到以太坊系的鏈時只替換了錢包函式庫 —— 證明同一套程式碼能跨越差異很大的鏈。',
   },
   'hero.cta': { en: 'Get started', zh: '開始使用' },
+  'how.go': { en: 'Open →', zh: '前往 →' },
 }
 
 export type I18nKey = keyof typeof DICT
