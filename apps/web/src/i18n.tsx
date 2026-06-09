@@ -28,8 +28,8 @@ export const DICT = {
   },
   'nav.label': { en: 'NAV / share', zh: 'NAV / 每股' },
   'nav.hint': {
-    en: 'Net Asset Value of one tBILL share, pushed on-chain by the oracle. Yield shows up as NAV rising above $1.00 (e.g. a T-bill accruing interest).',
-    zh: '每一份 tBILL 的資產淨值,由預言機上鏈。收益體現為 NAV 漲過 $1.00(例如國債計息)。',
+    en: 'NAV (Net Asset Value) — the value of one tBILL share, pushed on-chain by the oracle. Yield shows up as NAV rising above $1.00 (e.g. a T-bill accruing interest).',
+    zh: 'NAV(Net Asset Value,資產淨值)—— 每一份 tBILL 的價值,由預言機上鏈。收益體現為 NAV 漲過 $1.00(例如國債計息)。',
   },
   'nav.live': { en: 'live', zh: '即時' },
   'nav.liveHint': {
@@ -107,14 +107,19 @@ export const DICT = {
     en: 'Draw USDC against it without selling. Repay anytime; your Health Factor shows how safe you are.',
     zh: '在不賣出的情況下借出 USDC。隨時可還款;健康因子顯示你的安全程度。',
   },
-  'hf.hint': {
-    en: 'Health Factor = (collateral value × max LTV) ÷ debt. Above 1.0 is safe; the closer to 1.0 the riskier; below 1.0 the position can be liquidated.',
-    zh: '健康因子(Health Factor)=(抵押價值 × 最大抵押率)÷ 債務。高於 1.0 安全;越接近 1.0 越危險;低於 1.0 部位可被清算。',
+  'hf.title': { en: 'Health Factor', zh: '健康因子(Health Factor)' },
+  'hf.collateral': { en: 'collateral value', zh: '抵押價值' },
+  'hf.ltv': { en: 'max LTV', zh: '最大抵押率' },
+  'hf.debt': { en: 'debt', zh: '債務' },
+  'hf.bands': {
+    en: 'Above 1.0 is safe; the closer to 1.0 the riskier; below 1.0 can be liquidated.',
+    zh: '高於 1.0 安全;越接近 1.0 越危險;低於 1.0 可被清算。',
   },
   'footer.sdkHint': {
-    en: 'In plain terms: the part of the app that submits blockchain transactions was first built for the TRON network, then moved here to Ethereum-style chains by swapping only the wallet library — proof the same codebase works across very different chains.',
-    zh: '白話:應用中負責送出區塊鏈交易的部分,最初是為 TRON 網路寫的,後來只替換了錢包函式庫就搬到以太坊系的鏈上 —— 證明同一套程式碼能跨越差異很大的鏈運作。',
+    en: 'The code that submits blockchain transactions was first written for the TRON network; bringing it here to Ethereum-style chains needed only a wallet-library swap — proof the same codebase works across very different chains.',
+    zh: '應用中負責送出區塊鏈交易的部分,最初為 TRON 網路而寫;搬到以太坊系的鏈時只替換了錢包函式庫 —— 證明同一套程式碼能跨越差異很大的鏈。',
   },
+  'hero.cta': { en: 'Get started', zh: '開始使用' },
 }
 
 export type I18nKey = keyof typeof DICT

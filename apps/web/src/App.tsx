@@ -49,7 +49,7 @@ export function App() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" id="actions">
         <div className="section-title">{t('section.actions')}</div>
         <div className="grid">
           <SubscribeRedeem />

@@ -117,3 +117,13 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 @keyframes lien-breathe { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
 @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } .hero-art { display: none; } }
 @media (prefers-reduced-motion: reduce) { .chain { animation: none; } .flowdots { display: none; } }
+
+/* smooth scroll + CTA + clickable steps */
+html { scroll-behavior: smooth; }
+#actions, #subscribe, #borrow { scroll-margin-top: 16px; }
+.cta { display: inline-block; margin-top: 18px; background: linear-gradient(135deg, var(--accent), #9bc0ff); color: #0b0e14; font-weight: 700; font-size: 14px; padding: 9px 18px; border-radius: 9px; text-decoration: none; }
+.cta:hover { filter: brightness(1.07); }
+.step { text-decoration: none; color: inherit; cursor: pointer; transition: border-color .15s ease, transform .15s ease; }
+.step:hover { transform: translateY(-2px); }
+.step::after { content: '→'; position: absolute; top: 14px; right: 14px; color: var(--muted); opacity: 0; transition: opacity .15s ease, color .15s ease; }
+.step:hover::after { opacity: .8; color: var(--accent); }

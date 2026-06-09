@@ -55,11 +55,10 @@ export function Hero() {
         <h1>{t('hero.headline')}</h1>
         <p>{t('hero.sub')}</p>
         <div className="namecard">
-          <span className="term">
-            lien <span className="ipa">/liːn/ · {t('hero.noun')}</span>
-          </span>
+          <span className="term">lien</span>
           <span className="def">{t('hero.def')}</span>
         </div>
+        <a className="cta" href="#actions">{t('hero.cta')} →</a>
       </div>
       <div className="hero-art">
         <HeroArt />
@@ -71,20 +70,20 @@ export function Hero() {
 export function HowItWorks() {
   const { t } = useI18n()
   const steps = [
-    { title: t('how.s1t'), desc: t('how.s1d') },
-    { title: t('how.s2t'), desc: t('how.s2d') },
-    { title: t('how.s3t'), desc: t('how.s3d') },
+    { title: t('how.s1t'), desc: t('how.s1d'), href: '#subscribe' },
+    { title: t('how.s2t'), desc: t('how.s2d'), href: '#borrow' },
+    { title: t('how.s3t'), desc: t('how.s3d'), href: '#borrow' },
   ]
   return (
     <div className="how">
       <div className="section-title">{t('how.title')}</div>
       <div className="steps">
         {steps.map((s, i) => (
-          <div className="step" key={i}>
+          <a className="step" key={i} href={s.href}>
             <div className="step-num">{i + 1}</div>
             <div className="step-title">{s.title}</div>
             <div className="step-desc">{s.desc}</div>
-          </div>
+          </a>
         ))}
       </div>
     </div>

@@ -177,7 +177,7 @@ export function SubscribeRedeem() {
   }
 
   return (
-    <div className="card">
+    <div className="card" id="subscribe">
       <div className="label">
         {t('subredeem.label')}
         <Hint text={t('subredeem.hint')} />
@@ -260,6 +260,7 @@ export function BorrowPanel() {
   // spare borrowing power (USDC units), with a 5% margin so a Max-borrow keeps HF > 1
   const spareBorrow = health && health.weightedCollateral > health.debt ? health.weightedCollateral - health.debt : 0n
   const maxBorrow = (spareBorrow * 95n) / 100n
+  const ltvPct = Number(d.marketParams.lltv / 10n ** 16n)
 
   async function supplyCollateral() {
     const approved = await run({ address: d.rwaToken, abi: erc20Abi, functionName: 'approve', args: [d.morpho, collAmt] })
@@ -289,11 +290,11 @@ export function BorrowPanel() {
   }
 
   return (
-    <div className="card">
+    <div className="card" id="borrow">
       <div className="label">
         {t('borrow.label')}
         <Hint text={t('borrow.hint')} />
-        {health ? <HealthGauge hfWad={health.healthFactorWad} debt={health.debt} /> : null}
+        {health ? <HealthGauge health={health} ltvPct={ltvPct} usdcDecimals={d.usdcDecimals} /> : null}
       </div>
       <div className="sub">
         {health

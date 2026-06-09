@@ -1,6 +1,6 @@
 import { useAccount, useReadContract } from 'wagmi'
 import { erc20Abi, formatUnits } from 'viem'
-import { computeMarketId, identityRegistryAbi, morphoAbi, navOracleAbi } from '@lien/sdk'
+import { computeMarketId, identityRegistryAbi, morphoAbi, navOracleAbi, type PositionHealth } from '@lien/sdk'
 import { deployment as d } from '../deployments'
 import { Hint } from './Hint'
 import { useI18n } from '../i18n'
@@ -133,22 +133,26 @@ export function StatsBar() {
   )
 }
 
-export function HealthGauge({ hfWad, debt }: { hfWad: bigint; debt: bigint }) {
+export function HealthGauge({
+  health,
+  ltvPct,
+  usdcDecimals,
+}: {
+  health: PositionHealth
+  ltvPct: number
+  usdcDecimals: number
+}) {
   const { t } = useI18n()
-  if (debt === 0n) {
-    return (
-      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <span className="badge ok">{t('health.noDebt')}</span>
-        <Hint text={t('hf.hint')} />
-      </span>
-    )
-  }
-  const hf = Number(hfWad) / 1e18
-  const cls = hf >= 1.5 ? 'ok' : hf >= 1.1 ? 'warn' : 'danger'
+  const noDebt = health.debt === 0n
+  const hf = noDebt ? Infinity : Number(health.healthFactorWad) / 1e18
+  const cls = noDebt || hf >= 1.5 ? 'ok' : hf >= 1.1 ? 'warn' : 'danger'
+  const hint = noDebt
+    ? `${t('hf.title')} · ${t('hf.bands')}`
+    : `${t('hf.title')} = (${t('hf.collateral')} $${fmt(health.collateralValue, usdcDecimals)} × ${t('hf.ltv')} ${ltvPct}%) ÷ ${t('hf.debt')} $${fmt(health.debt, usdcDecimals)} = ${hf.toFixed(3)} · ${t('hf.bands')}`
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-      <span className={`badge ${cls}`}>HF {hf.toFixed(3)}</span>
-      <Hint text={t('hf.hint')} />
+      <span className={`badge ${cls}`}>{noDebt ? t('health.noDebt') : `HF ${hf.toFixed(3)}`}</span>
+      <Hint text={hint} />
     </span>
   )
 }
