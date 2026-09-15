@@ -7,7 +7,7 @@ const hash = `0x${'ab'.repeat(32)}`
 const req = { address: account.address, abi: [], functionName: 'deposit', args: [] } as any
 function clients() {
   const calls: string[] = []
-  const pub = { chain: { id: 84532 }, getBlockNumber: async () => 100n, simulateContract: async () => { calls.push('simulate'); return { request: {} } }, waitForTransactionReceipt: async () => ({ status: 'success', transactionHash: hash }) }
+  const pub = { chain: { id: 84532 }, getBlockNumber: async () => 100n, estimateContractGas: async () => 200_000n, simulateContract: async () => { calls.push('simulate'); return { request: {} } }, waitForTransactionReceipt: async () => ({ status: 'success', transactionHash: hash }) }
   const wallet = { account, getChainId: async () => 84532, getAddresses: async () => [account.address], writeContract: async () => { calls.push('write'); return hash } }
   return { pub, wallet, calls, run: (onState?: (s: TxState) => void) => sendWrite(pub as any as PublicClient, wallet as any as WalletClient, req, onState) }
 }
@@ -64,4 +64,12 @@ test('preflight is anchored at or after the approval block even if RPC head lags
   c.pub.simulateContract = async (options: any) => { observed = options.blockNumber; return { request: {} } }
   await sendWrite(c.pub as any, c.wallet as any, { ...req, minimumBlock: 105n })
   assert.equal(observed, 105n)
+})
+
+
+test('wallet receives buffered gas rather than a brittle exact estimate', async () => {
+  const c = clients(); let gas: bigint | undefined
+  c.wallet.writeContract = async (request: any) => { gas = request.gas; return hash }
+  assert.equal((await c.run()).status, 'confirmed')
+  assert.equal(gas, 310_000n)
 })

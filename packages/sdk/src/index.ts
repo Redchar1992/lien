@@ -140,8 +140,15 @@ export async function sendWrite(
       functionName: req.functionName as never,
       args: req.args as never,
     })
+    const estimatedGas = await publicClient.estimateContractGas({
+      account, blockNumber, address: req.address, abi: req.abi as never,
+      functionName: req.functionName as never, args: req.args as never,
+    })
+    // Interest accrual and zero/nonzero storage writes can change between
+    // estimation and inclusion. Buffer the limit; only used gas is charged.
+    const gas = estimatedGas * 130n / 100n + 50_000n
     onState?.({ status: 'signing' })
-    hash = await walletClient.writeContract(request as never)
+    hash = await walletClient.writeContract({ ...request, gas } as never)
     onState?.({ status: 'pending', hash })
     const receipt = await publicClient.waitForTransactionReceipt({
       hash, timeout: 120_000, confirmations: 2,

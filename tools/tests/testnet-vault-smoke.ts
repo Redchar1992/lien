@@ -35,7 +35,8 @@ async function snapshot(at?: bigint) {
 }
 async function write(address: `0x${string}`, abi: readonly unknown[], functionName: string, args: readonly unknown[]) {
   const { request } = await publicClient.simulateContract({ address, abi, functionName, args, account, blockNumber: lastReceiptBlock ?? await publicClient.getBlockNumber({ cacheTime: 0 }) } as any)
-  const hash = await wallet.writeContract(request)
+  const estimate = await publicClient.estimateContractGas({ ...request, blockNumber: lastReceiptBlock ?? await publicClient.getBlockNumber({ cacheTime: 0 }) } as any)
+  const hash = await wallet.writeContract({ ...request, gas: estimate * 130n / 100n + 50_000n })
   console.log(`${functionName}: ${hash}`)
   // No automatic transaction retry after a known hash.
   const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000, confirmations: 2 })
