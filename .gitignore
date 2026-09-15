@@ -18,3 +18,6 @@ contracts/broadcast/
 # ponder
 .ponder/
 apps/indexer/ponder-env.d.ts
+# browser verification artifacts
+tools/tests/test-results/
+tools/tests/playwright-report/

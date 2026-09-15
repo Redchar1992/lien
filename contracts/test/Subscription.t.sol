@@ -193,4 +193,22 @@ contract SubscriptionTest is Test {
         mgr.withdrawProceeds(admin, bal - 100e6); // leaves exactly the 100 reserve
         assertEq(usdc.balanceOf(address(mgr)), 100e6);
     }
+    function test_claim_rejects_wrong_owner_and_duplicate_but_not_stale_nav() public {
+        vm.prank(alice);
+        mgr.subscribe(100e6);
+        vm.prank(alice);
+        uint256 id = mgr.requestRedemption(100e18);
+        vm.warp(block.timestamp + SETTLE);
+        assertTrue(oracle.isStale());
+        vm.prank(mallory);
+        vm.expectRevert("SM: not owner");
+        mgr.claimRedemption(id);
+        vm.prank(alice);
+        mgr.claimRedemption(id);
+        assertEq(mgr.outstandingRedemptions(), 0);
+        vm.prank(alice);
+        vm.expectRevert("SM: claimed");
+        mgr.claimRedemption(id);
+    }
+
 }

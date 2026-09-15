@@ -24,7 +24,7 @@ import {MorphoBalancesLib} from "../morpho/libraries/periphery/MorphoBalancesLib
 ///
 /// @dev Simplifications vs production MetaMorpho (documented, not hidden):
 /// no timelock on cap changes, no performance fee, no pending-config flow, and
-/// withdrawal assumes sufficient market liquidity along the withdraw queue.
+/// no asynchronous withdrawal queue. Exits are limited to available liquidity.
 /// Inflation-attack protection is inherited from OZ ERC4626 (virtual assets).
 contract LienVault is ERC4626, AccessControl {
     using SafeERC20 for IERC20;
@@ -81,7 +81,10 @@ contract LienVault is ERC4626, AccessControl {
     }
 
     function setWithdrawQueue(Id[] calldata queue) external onlyRole(CURATOR_ROLE) {
-        for (uint256 i; i < queue.length; ++i) require(config[queue[i]].enabled, "vault: market not enabled");
+        for (uint256 i; i < queue.length; ++i) {
+            require(config[queue[i]].enabled, "vault: market not enabled");
+            for (uint256 j; j < i; ++j) require(Id.unwrap(queue[j]) != Id.unwrap(queue[i]), "vault: duplicate market");
+        }
         withdrawQueue = queue;
         emit WithdrawQueueSet(queue.length);
     }
@@ -101,6 +104,29 @@ contract LienVault is ERC4626, AccessControl {
             total += vaultSupplyAssets(markets[i]);
         }
         return total;
+    }
+
+    /// @notice Cash reachable through the withdrawal queue, not the vault's book value.
+    function availableLiquidity() public view returns (uint256 liquidity) {
+        liquidity = IERC20(asset()).balanceOf(address(this));
+        for (uint256 i; i < withdrawQueue.length; ++i) {
+            liquidity += _marketLiquidity(withdrawQueue[i]);
+        }
+    }
+
+    function _marketLiquidity(Id id) internal view returns (uint256) {
+        (uint256 supplied,, uint256 borrowed,) =
+            MorphoBalancesLib.expectedMarketBalances(morpho, marketParamsOf[id]);
+        uint256 cash = supplied > borrowed ? supplied - borrowed : 0;
+        return Math.min(vaultSupplyAssets(id), cash);
+    }
+
+    function maxWithdraw(address owner) public view override returns (uint256) {
+        return Math.min(super.maxWithdraw(owner), availableLiquidity());
+    }
+
+    function maxRedeem(address owner) public view override returns (uint256) {
+        return Math.min(balanceOf(owner), convertToShares(availableLiquidity()));
     }
 
     // --- allocation hooks ---
@@ -144,8 +170,7 @@ contract LienVault is ERC4626, AccessControl {
         uint256 len = withdrawQueue.length;
         for (uint256 i; i < len && need > 0; ++i) {
             Id id = withdrawQueue[i];
-            uint256 supplied = vaultSupplyAssets(id);
-            uint256 toWithdraw = Math.min(need, supplied);
+            uint256 toWithdraw = Math.min(need, _marketLiquidity(id));
             if (toWithdraw == 0) continue;
             (uint256 withdrawn,) = morpho.withdraw(marketParamsOf[id], toWithdraw, 0, address(this), address(this));
             need -= withdrawn;

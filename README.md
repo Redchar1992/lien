@@ -8,16 +8,19 @@ redemption flows, and usable as **collateral in an isolated lending market** so
 holders can borrow stablecoins **without redeeming** — the protocol takes a *lien*
 on the tokenized asset.
 
-> Portfolio project (EVM / RWA). Built EVM-native (Foundry + viem/wagmi) as the
-> transferable counterpart to my TRON lending work — the full-stack pattern moves
-> from TronWeb to viem as an interface swap, not a rewrite.
+**技术实践 / technical exploration — mock assets only, not a live investment product.**
+
+- **[Open the wallet-free demo](https://redchar1992.github.io/lien/)** — simulation is the default; Base Sepolia is a separate explicit mode.
+- [Five-minute walkthrough and deployment guide](docs/demo-runbook.md)
+- [Architecture, reused components and trust boundaries](docs/architecture-and-risks.md)
+- [Verification evidence](docs/verification.md)
 
 ## Why it's interesting (the hard parts)
 
 - **Compliance as a first-class concern.** The RWA token is *permissioned* (KYC
   allowlist + transfer restrictions + agent powers: freeze / forceTransfer /
-  recovery — required by regulation, with the centralization trade-off discussed
-  honestly). A faithful, focused subset of the ERC-3643 model.
+  recovery — a technical permission model, **not proof of legal compliance**;
+  centralization trade-offs are documented). A faithful, focused subset of the ERC-3643 model.
 - **NAV oracle = the asset's truth.** Off-chain valuation pushed on-chain with
   staleness + circuit-breaker guards; yield accrues via NAV appreciation. An RWA
   oracle carries more responsibility than a DeFi price feed.
@@ -43,9 +46,9 @@ The depositor journey, and the mechanism behind each step:
 4. **Borrow against it.** Post `tBILL` as collateral in the isolated lending market (a
    vendored Morpho Blue engine) and **borrow USDC without selling** — the protocol takes a
    *lien* on your tokenized asset. The **Health Factor** = LTV-weighted collateral ÷ debt;
-   above 1.0 is safe, below 1.0 is liquidatable. The NAV→Morpho oracle adapter is
-   **fail-safe**: a stale/circuit-broken NAV freezes the market rather than pricing off a
-   dead feed.
+   above 1.0 meets the configured threshold, below 1.0 is liquidatable. The NAV→Morpho oracle adapter is
+   **fail-safe**: a stale/circuit-broken NAV blocks price-dependent actions rather than pricing off a
+   dead feed (repayment and supplying liquidity remain possible).
 5. **Liquidation of permissioned collateral.** If a position goes underwater, anyone can
    liquidate it through the `LiquidationRouter` — a KYC'd contract with a USDC buffer that
    receives the seized `tBILL`, fronts the repayment, and pays the keeper the incentive in
@@ -57,9 +60,9 @@ The depositor journey, and the mechanism behind each step:
    The UI surfaces your pending redemptions with a live countdown and a Claim button that
    unlocks once settled — and `withdrawProceeds` can never dip into the reserve backing those
    queued claims.
-7. **Or deposit into the curated vault.** Prefer hands-off, diversified exposure?
+7. **Or deposit into the curated vault.** Prefer a curated lending route?
    `LienVault` (ERC-4626, MetaMorpho-style) takes your USDC and a curator allocates it
-   across multiple isolated RWA markets under per-market caps; yield accrues to depositors.
+   across configured isolated RWA markets under per-market caps; borrower interest accrues to depositors. The demo configures only one market, not diversified exposure.
 
 Every privileged/agent action emits an auditable event; the trust boundary is documented
 honestly rather than hidden.
@@ -67,7 +70,7 @@ honestly rather than hidden.
 ## Architecture
 
 ```
-Frontend (React + Vite + wagmi/viem)  →  Indexer (ponder/viem + Postgres)
+Frontend (React + Vite + wagmi/viem)     Indexer scaffold (not hosted)
         │                                        │
         └──────────────  Contracts (Foundry)  ───┘
             compliance/  IdentityRegistry + transfer-restriction hook + roles
@@ -84,19 +87,20 @@ Postgres · pnpm + turbo monorepo · Base Sepolia.
 
 ## Status — roadmap
 
+Original milestone test counts below are historical; [verification](docs/verification.md) records the current regression results.
+
 - [x] **M0** — monorepo scaffold + vendored Morpho engine
 - [x] **M1** — compliance core (IdentityRegistry, permissioned RWA token, agent roles) — 14 tests
 - [x] **M2** — NAV oracle (staleness + circuit breaker) + subscription/redemption (USDC ↔ RWA @ NAV, T+N queue) — 11 tests
 - [x] **M3** — isolated lending market over Morpho + NAV→1e36 oracle adapter + permissioned-collateral liquidation (router pattern) — 8 tests · [ADRs](contracts/docs/合规设计.md)
 - [x] **M4** — full-stack frontend (React + viem/wagmi + RainbowKit) + viem tx-lifecycle SDK + ponder indexer scaffold — typechecks
 - [x] **M5** — deployed + seeded live on **Base Sepolia** ([addresses](#live-on-base-sepolia)); `pnpm --filter @lien/web dev` connects to it
-- [x] **M6** — curated ERC-4626 vault (MetaMorpho-style): depositors lend USDC across isolated RWA markets under per-market caps; yield accrues to depositors — 4 tests
+- [x] **M6** — curated ERC-4626 vault with cap/queues, liquidity-aware exit limits and deposit/withdraw/redeem UI; see current verification evidence below.
+- [x] **M7** — wallet-free simulation, risk scenarios, static Pages workflow and browser/SDK/contract regression checks.
 
 ## Live on Base Sepolia
 
-Deployed + seeded 2026-06-08 (market liquidity, a healthy borrow position, router
-buffer + redemption liquidity). NAV $1.00. Run `pnpm --filter @lien/web dev` and
-connect a Base Sepolia wallet.
+Core contracts were deployed and seeded on 2026-06-08. That is historical state, not a promise of current NAV freshness, liquidity or keeper uptime. Open the demo and explicitly switch to Base Sepolia, or run `pnpm --filter @lien/web dev`. See [verification](docs/verification.md) for dated evidence. No mainnet or real assets are used.
 
 | Contract | Address |
 | --- | --- |
@@ -107,6 +111,7 @@ connect a Base Sepolia wallet.
 | SubscriptionManager | `0x8Fe81a819c6280678b607fDCCC09AB54e526E48b` |
 | Morpho (engine) | `0x62bd467F599153e8E3C46c6629CA2b774AF405B4` |
 | MorphoNavOracleAdapter | `0x86e9000956B488192F3e572d2C73c0C0DfCB7b0b` |
+| LienVault (2026-09-15) | `0xc4ca6BbC70C429F96d19577B641fbe126a0CA93B` |
 | LiquidationRouter | `0xdBc5Fe8F7Bc3cd34F5fBdBb670F1Aa7690d25375` |
 
 To interact (subscribe / borrow) a wallet must be KYC-verified by the agent — the
