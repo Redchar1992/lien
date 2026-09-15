@@ -1,0 +1,14 @@
+{
+  "name": "lien-verification",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsx --test *.test.ts",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "tsx": "4.23.13",
+    "viem": "2.56.5"
+  }
+}

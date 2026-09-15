@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-09-15T06:50:51.065Z",
+  "chainId": 84532,
+  "vault": "0xc4ca6BbC70C429F96d19577B641fbe126a0CA93B",
+  "account": "0xC07F8Fb1104A9CF258201fd3FE4DA3ce502Cb201",
+  "mockAssetsOnly": true,
+  "staleNAV": true,
+  "before": {
+    "blockNumber": "46843356",
+    "cash": "684932000000",
+    "shares": "999999998",
+    "maxWithdraw": "1000000020"
+  },
+  "withdrawn": {
+    "blockNumber": "46843360",
+    "cash": "685032000000",
+    "shares": "900000000",
+    "maxWithdraw": "900000020"
+  },
+  "deposited": {
+    "blockNumber": "46843367",
+    "cash": "684932000000",
+    "shares": "999999997",
+    "maxWithdraw": "1000000020"
+  },
+  "redeemed": {
+    "blockNumber": "46843371",
+    "cash": "684942000000",
+    "shares": "989999997",
+    "maxWithdraw": "990000021"
+  },
+  "after": {
+    "blockNumber": "46843380",
+    "cash": "684932000000",
+    "shares": "999999996",
+    "maxWithdraw": "1000000021"
+  },
+  "transactions": [
+    {
+      "functionName": "withdraw",
+      "hash": "0x585e3eea73613de261eb81549210ce23b19e9d40f8b7629f55bfdd2196adbc0c",
+      "blockNumber": "46843360",
+      "status": "success"
+    },
+    {
+      "functionName": "approve",
+      "hash": "0x022bf5ffa1d748e6dfd1fe885b3e9827a3c2bb87a1fbd2c0d7582f3da721a84e",
+      "blockNumber": "46843364",
+      "status": "success"
+    },
+    {
+      "functionName": "deposit",
+      "hash": "0xc4044dff064f4a98de5b6ccd6e35d8e87b673cca14a189f1f74b52e72b68ea2c",
+      "blockNumber": "46843367",
+      "status": "success"
+    },
+    {
+      "functionName": "redeem",
+      "hash": "0x34d58a1a962bef3130b12e8e45da5a0478dc271fe57185ed835c711d6db165ba",
+      "blockNumber": "46843371",
+      "status": "success"
+    },
+    {
+      "functionName": "approve",
+      "hash": "0x7287f951ae9aeffa94ff79cc4f33cf26ec96a30c24e601138ee07bbc3e878d8d",
+      "blockNumber": "46843376",
+      "status": "success"
+    },
+    {
+      "functionName": "deposit",
+      "hash": "0x50841f210a0416ee5d9788779075296057336fd06480c86af41ebb5f23b38b0f",
+      "blockNumber": "46843380",
+      "status": "success"
+    }
+  ]
+}

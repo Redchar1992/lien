@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import { isAddress, zeroAddress, type Address } from 'viem'
 import type { MarketParamsOnchain } from '@lien/sdk'
 
 export interface LienDeployment {
@@ -10,6 +10,7 @@ export interface LienDeployment {
   identityRegistry: Address
   navOracle: Address
   subscriptionManager: Address
+  vault?: Address
   morpho: Address
   liquidationRouter: Address
   marketParams: MarketParamsOnchain
@@ -19,6 +20,10 @@ export interface LienDeployment {
 
 /** Base Sepolia deployment (M5, 2026-06-08). Deploy block ~42574053. */
 export const deployment: LienDeployment = {
+  vault: import.meta.env.VITE_VAULT_ADDRESS === undefined
+    ? '0xc4ca6BbC70C429F96d19577B641fbe126a0CA93B' // 2026-09-15; mock USDC only
+    : isAddress(import.meta.env.VITE_VAULT_ADDRESS) && import.meta.env.VITE_VAULT_ADDRESS !== zeroAddress
+      ? import.meta.env.VITE_VAULT_ADDRESS as Address : undefined,
   chainId: 84532,
   isDeployed: true,
   usdc: '0xd11cC6B62825fFa10Cf96Dd630D2eD48263636e5',

@@ -9,13 +9,16 @@ import {SubscriptionManager} from "../src/rwa/SubscriptionManager.sol";
 import {MockERC20} from "../src/mocks/MockERC20.sol";
 import {MorphoNavOracleAdapter} from "../src/oracle/MorphoNavOracleAdapter.sol";
 import {LiquidationRouter} from "../src/market/LiquidationRouter.sol";
+import {LienVault} from "../src/vault/LienVault.sol";
+import {MarketParamsLib} from "../src/morpho/libraries/MarketParamsLib.sol";
 import {Morpho} from "../src/morpho/Morpho.sol";
-import {IMorpho, MarketParams} from "../src/morpho/interfaces/IMorpho.sol";
+import {IMorpho, MarketParams, Id} from "../src/morpho/interfaces/IMorpho.sol";
 import {IrmMock} from "../src/morpho/mocks/IrmMock.sol";
 
 /// @notice Deploys the full lien stack to a testnet and seeds a live demo.
 /// Run: `forge script script/Deploy.s.sol --rpc-url base_sepolia --broadcast`
 contract Deploy is Script {
+    using MarketParamsLib for MarketParams;
     uint256 constant LLTV = 0.86e18;
 
     struct Sys {
@@ -28,9 +31,11 @@ contract Deploy is Script {
         IrmMock irm;
         MorphoNavOracleAdapter adapter;
         LiquidationRouter router;
+        LienVault vault;
     }
 
     function run() external {
+        require(block.chainid == 84532 || block.chainid == 31337, "testnet/local only");
         uint256 pk = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(pk);
 
@@ -41,6 +46,13 @@ contract Deploy is Script {
         s.router = new LiquidationRouter(address(s.morpho), mp, address(s.oracle), address(s.mgr), 6, 18, deployer);
         _kyc(s, deployer);
         _seed(s, mp, deployer);
+        s.vault = new LienVault(address(s.usdc), address(s.morpho), deployer);
+        s.vault.setCap(mp, 20_000e6);
+        Id[] memory queue = new Id[](1); queue[0] = mp.id();
+        s.vault.setSupplyQueue(queue);
+        s.vault.setWithdrawQueue(queue);
+        s.usdc.approve(address(s.vault), 1_000e6);
+        s.vault.deposit(1_000e6, deployer);
         vm.stopBroadcast();
 
         _log(s);
@@ -95,6 +107,7 @@ contract Deploy is Script {
     }
 
     function _log(Sys memory s) internal pure {
+        console2.log("ADDR_VAULT=%s", address(s.vault));
         console2.log("ADDR_USDC=%s", address(s.usdc));
         console2.log("ADDR_RWA=%s", address(s.rwa));
         console2.log("ADDR_IDENTITY_REGISTRY=%s", address(s.reg));

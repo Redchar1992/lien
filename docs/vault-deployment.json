@@ -1,0 +1,76 @@
+{
+  "chainId": 84532,
+  "vault": "0xc4ca6BbC70C429F96d19577B641fbe126a0CA93B",
+  "date": "2026-09-15",
+  "mockAssetsOnly": true,
+  "transactions": [
+    {
+      "hash": "0x8983e671fc6663491b4c23b2da1303c9a9da66113f039712e346db9a8afdd7c1",
+      "type": "CREATE",
+      "function": null,
+      "contractAddress": "0xc4ca6bbc70c429f96d19577b641fbe126a0ca93b"
+    },
+    {
+      "hash": "0x650f8e86a2d84de745b76a2ab950c297297d01c25c361a6b16d2004869c21766",
+      "type": "CALL",
+      "function": "setCap((address,address,address,address,uint256),uint256)",
+      "contractAddress": "0xc4ca6bbc70c429f96d19577b641fbe126a0ca93b"
+    },
+    {
+      "hash": "0xdb785e412d66c8209782b09dcd9d08ab58fdd8307b92749a3c686401fa730dac",
+      "type": "CALL",
+      "function": "setSupplyQueue(bytes32[])",
+      "contractAddress": "0xc4ca6bbc70c429f96d19577b641fbe126a0ca93b"
+    },
+    {
+      "hash": "0x71416fbaec9d475a8173902b8d21aae19c3706744e29a67150d0f5970b83433d",
+      "type": "CALL",
+      "function": "setWithdrawQueue(bytes32[])",
+      "contractAddress": "0xc4ca6bbc70c429f96d19577b641fbe126a0ca93b"
+    },
+    {
+      "hash": "0xdaf8776886d57d49a3fa28378242264d781cbc4b0be61c57aba5a3785bd4c03d",
+      "type": "CALL",
+      "function": "approve(address,uint256)",
+      "contractAddress": "0xd11cc6b62825ffa10cf96dd630d2ed48263636e5"
+    },
+    {
+      "hash": "0x3296cc7d859b460a4a8c0f2b721e7953d3b6df4e7354cf9e59a7ebe8e15a42fe",
+      "type": "CALL",
+      "function": "deposit(uint256,address)",
+      "contractAddress": "0xc4ca6bbc70c429f96d19577b641fbe126a0ca93b"
+    }
+  ],
+  "receipts": [
+    {
+      "hash": "0x71416fbaec9d475a8173902b8d21aae19c3706744e29a67150d0f5970b83433d",
+      "status": "0x1",
+      "block": "0x2cac456"
+    },
+    {
+      "hash": "0x8983e671fc6663491b4c23b2da1303c9a9da66113f039712e346db9a8afdd7c1",
+      "status": "0x1",
+      "block": "0x2cac456"
+    },
+    {
+      "hash": "0xdb785e412d66c8209782b09dcd9d08ab58fdd8307b92749a3c686401fa730dac",
+      "status": "0x1",
+      "block": "0x2cac456"
+    },
+    {
+      "hash": "0x650f8e86a2d84de745b76a2ab950c297297d01c25c361a6b16d2004869c21766",
+      "status": "0x1",
+      "block": "0x2cac456"
+    },
+    {
+      "hash": "0xdaf8776886d57d49a3fa28378242264d781cbc4b0be61c57aba5a3785bd4c03d",
+      "status": "0x1",
+      "block": "0x2cac457"
+    },
+    {
+      "hash": "0x3296cc7d859b460a4a8c0f2b721e7953d3b6df4e7354cf9e59a7ebe8e15a42fe",
+      "status": "0x1",
+      "block": "0x2cac457"
+    }
+  ]
+}

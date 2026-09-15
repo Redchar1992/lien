@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useAccount, usePublicClient, useReadContract } from 'wagmi'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { type PublicClient, erc20Abi, formatUnits, parseUnits } from 'viem'
+import { type PublicClient, erc20Abi, formatUnits } from 'viem'
 import { computeMarketId, morphoAbi, navOracleAbi, readPositionHealth, subscriptionManagerAbi } from '@lien/sdk'
 import { deployment as d } from '../deployments'
 import { useTx } from '../tx'
+import { amount } from '../demo/model'
+import { TxFeedback } from './TxFeedback'
 import { HealthGauge } from './Widgets'
 import { Hint } from './Hint'
 import { useI18n } from '../i18n'
@@ -37,11 +39,6 @@ function BalanceRow({
   )
 }
 
-function TxStatusLine({ status, message }: { status: string; message?: string }) {
-  if (status === 'idle') return null
-  return <div className={`txline ${status}`}>{status}{message ? ` · ${message}` : ''}</div>
-}
-
 interface PendingItem {
   id: number
   usdcOwed: bigint
@@ -52,8 +49,8 @@ interface PendingItem {
 function PendingRedemptions() {
   const { t } = useI18n()
   const { address } = useAccount()
-  const publicClient = usePublicClient()
-  const { state, run } = useTx()
+  const publicClient = usePublicClient({ chainId: d.chainId })
+  const { state, run, check, busy } = useTx()
 
   const { data: pending, refetch } = useQuery({
     queryKey: ['pending-redemptions', address],
@@ -107,11 +104,11 @@ function PendingRedemptions() {
             <span className="sub">
               ${formatUnits(p.usdcOwed, d.usdcDecimals)} USDC · {ready ? t('pending.ready') : `${t('pending.claimableIn')} ~${secs}s`}
             </span>
-            <button disabled={!ready} onClick={() => claim(p.id)}>{t('pending.claim')}</button>
+            <button disabled={!ready || busy} onClick={() => claim(p.id)}>{t('pending.claim')}</button>
           </div>
         )
       })}
-      <TxStatusLine status={state.status} message={state.error?.message} />
+      <TxFeedback state={state} check={check} />
     </div>
   )
 }
@@ -119,12 +116,13 @@ function PendingRedemptions() {
 export function SubscribeRedeem() {
   const { t } = useI18n()
   const { address } = useAccount()
-  const { state, run } = useTx()
+  const { state, run, check, busy } = useTx()
   const queryClient = useQueryClient()
   const [usdcIn, setUsdcIn] = useState('')
   const [rwaIn, setRwaIn] = useState('')
 
   const { data: usdcBalance } = useReadContract({
+    chainId: d.chainId,
     address: d.usdc,
     abi: erc20Abi,
     functionName: 'balanceOf',
@@ -132,6 +130,7 @@ export function SubscribeRedeem() {
     query: { enabled: Boolean(address) && d.isDeployed, refetchInterval: 8000 },
   })
   const { data: tbillBalance } = useReadContract({
+    chainId: d.chainId,
     address: d.rwaToken,
     abi: erc20Abi,
     functionName: 'balanceOf',
@@ -143,6 +142,7 @@ export function SubscribeRedeem() {
   const rwaAmt = safeParse(rwaIn, d.rwaDecimals)
 
   const { data: previewRwa } = useReadContract({
+    chainId: d.chainId,
     address: d.subscriptionManager,
     abi: subscriptionManagerAbi,
     functionName: 'previewSubscribe',
@@ -150,6 +150,7 @@ export function SubscribeRedeem() {
     query: { enabled: d.isDeployed && usdcAmt > 0n },
   })
   const { data: previewUsdc } = useReadContract({
+    chainId: d.chainId,
     address: d.subscriptionManager,
     abi: subscriptionManagerAbi,
     functionName: 'previewRedeem',
@@ -157,7 +158,7 @@ export function SubscribeRedeem() {
     query: { enabled: d.isDeployed && rwaAmt > 0n },
   })
 
-  const disabled = !address || !d.isDeployed
+  const disabled = !address || !d.isDeployed || busy
 
   async function subscribe() {
     const approved = await run({ address: d.usdc, abi: erc20Abi, functionName: 'approve', args: [d.subscriptionManager, usdcAmt] })
@@ -205,7 +206,7 @@ export function SubscribeRedeem() {
       </div>
       <div className="sub">{previewUsdc !== undefined ? `→ $${fmt(previewUsdc, d.usdcDecimals)} ${t('subredeem.settlesTN')}` : ''}</div>
       <PendingRedemptions />
-      <TxStatusLine status={state.status} message={state.error?.message} />
+      <TxFeedback state={state} check={check} />
     </div>
   )
 }
@@ -213,13 +214,14 @@ export function SubscribeRedeem() {
 export function BorrowPanel() {
   const { t } = useI18n()
   const { address } = useAccount()
-  const publicClient = usePublicClient()
-  const { state, run } = useTx()
+  const publicClient = usePublicClient({ chainId: d.chainId })
+  const { state, run, check, busy } = useTx()
   const queryClient = useQueryClient()
   const [collIn, setCollIn] = useState('')
   const [borrowIn, setBorrowIn] = useState('')
 
   const { data: tbillBalance } = useReadContract({
+    chainId: d.chainId,
     address: d.rwaToken,
     abi: erc20Abi,
     functionName: 'balanceOf',
@@ -230,6 +232,7 @@ export function BorrowPanel() {
   const marketId = useMemo(() => computeMarketId(d.marketParams), [])
 
   const { data: nav } = useReadContract({
+    chainId: d.chainId,
     address: d.navOracle,
     abi: navOracleAbi,
     functionName: 'nav',
@@ -255,7 +258,7 @@ export function BorrowPanel() {
 
   const collAmt = safeParse(collIn, d.rwaDecimals)
   const borrowAmt = safeParse(borrowIn, d.usdcDecimals)
-  const disabled = !address || !d.isDeployed
+  const disabled = !address || !d.isDeployed || busy
 
   // spare borrowing power (USDC units), with a 5% margin so a Max-borrow keeps HF > 1
   const spareBorrow = health && health.weightedCollateral > health.debt ? health.weightedCollateral - health.debt : 0n
@@ -322,16 +325,11 @@ export function BorrowPanel() {
         <input placeholder={t('borrow.borrowPh')} value={borrowIn} onChange={(e) => setBorrowIn(e.target.value)} />
         <button disabled={disabled || borrowAmt === 0n} onClick={borrow}>{t('borrow.borrow')}</button>
       </div>
-      <TxStatusLine status={state.status} message={state.error?.message} />
+      <TxFeedback state={state} check={check} />
     </div>
   )
 }
 
 function safeParse(v: string, decimals: number): bigint {
-  try {
-    if (!v || Number.isNaN(Number(v))) return 0n
-    return parseUnits(v as `${number}`, decimals)
-  } catch {
-    return 0n
-  }
+  return amount(v, decimals)
 }

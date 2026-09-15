@@ -1,3 +1,4 @@
+import { VaultPanel } from './components/VaultPanel'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { KycBadge, NavCard, PortfolioCard, StatsBar } from './components/Widgets'
 import { SubscribeRedeem, BorrowPanel } from './components/Actions'
@@ -27,6 +28,7 @@ export function App() {
         </div>
       </header>
 
+      <div className="banner"><strong>Base Sepolia · 真实测试网调用 / Testnet</strong><br />使用 mock USDC / tBILL，无真实资产背书。钱包需测试币；RWA 申购需管理员白名单。NAV 可能已过期，读取失败不代表有效。不会自动切换网络或发送交易。</div>
       <Hero />
       <HowItWorks />
 
@@ -56,6 +58,8 @@ export function App() {
           <BorrowPanel />
         </div>
       </section>
+
+      <VaultPanel />
 
       <footer className="foot">
         <p>

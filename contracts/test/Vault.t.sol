@@ -133,4 +133,89 @@ contract VaultTest is Test {
         vault.redeem(shares, lp, lp);
         assertGt(usdc.balanceOf(lp), 100_000e6, "lp redeemed more than deposited (yield)");
     }
+    function _borrow(uint256 assets) internal {
+        vm.startPrank(alice);
+        rwa.approve(address(morpho), type(uint256).max);
+        morpho.supplyCollateral(mp, 10_000e18, alice, "");
+        morpho.borrow(mp, assets, 0, alice, alice);
+        vm.stopPrank();
+    }
+
+    function test_limits_follow_cash_not_book_assets() public {
+        vm.prank(lp);
+        vault.deposit(10_000e6, lp);
+        _borrow(8_000e6);
+        assertEq(vault.totalAssets(), 10_000e6);
+        assertEq(vault.availableLiquidity(), 2_000e6);
+        assertEq(vault.maxWithdraw(lp), 2_000e6);
+        assertEq(vault.maxRedeem(lp), 2_000e6);
+        uint256 beforeShares = vault.balanceOf(lp);
+        vm.prank(lp);
+        vm.expectRevert();
+        vault.withdraw(2_000e6 + 1, lp, lp);
+        assertEq(vault.balanceOf(lp), beforeShares, "failed exit preserves shares");
+        uint256 maxAssets = vault.maxWithdraw(lp);
+        vm.prank(lp);
+        vault.withdraw(maxAssets, lp, lp);
+        assertEq(vault.maxWithdraw(lp), 0);
+        assertEq(vault.balanceOf(lp), 8_000e6);
+    }
+
+    function test_withdraw_falls_through_illiquid_market_to_next_market() public {
+        MarketParams memory second = mp;
+        vm.startPrank(admin);
+        second.irm = address(new IrmMock());
+        morpho.enableIrm(second.irm);
+        morpho.createMarket(second);
+        vault.setCap(mp, 10_000e6);
+        vault.setCap(second, 10_000e6);
+        Id[] memory q = new Id[](2);
+        q[0] = id; q[1] = second.id();
+        vault.setSupplyQueue(q);
+        vault.setWithdrawQueue(q);
+        vm.stopPrank();
+        vm.prank(lp);
+        vault.deposit(20_000e6, lp);
+        _borrow(8_000e6);
+        assertEq(vault.maxWithdraw(lp), 12_000e6);
+        vm.prank(lp);
+        vault.withdraw(12_000e6, lp, lp);
+        assertEq(vault.vaultSupplyAssets(id), 8_000e6);
+        assertEq(vault.vaultSupplyAssets(second.id()), 0);
+    }
+
+    function test_duplicate_withdraw_markets_rejected() public {
+        Id[] memory q = new Id[](2); q[0] = id; q[1] = id;
+        vm.prank(admin);
+        vm.expectRevert("vault: duplicate market");
+        vault.setWithdrawQueue(q);
+    }
+
+    function test_idle_can_exit_when_market_cash_exhausted() public {
+        vm.prank(admin);
+        vault.setCap(mp, 8_000e6);
+        vm.prank(lp);
+        vault.deposit(10_000e6, lp);
+        _borrow(8_000e6);
+        assertEq(vault.maxWithdraw(lp), 2_000e6);
+        uint256 maxShares = vault.maxRedeem(lp);
+        vm.prank(lp);
+        vault.redeem(maxShares, lp, lp);
+        assertEq(vault.balanceOf(lp), 8_000e6);
+    }
+
+    function testFuzz_deposit_redeem_no_free_assets(uint96 raw) public {
+        uint256 assets = bound(uint256(raw), 1, 100_000e6);
+        uint256 before = usdc.balanceOf(lp);
+        vm.startPrank(lp);
+        uint256 expected = vault.previewDeposit(assets);
+        uint256 minted = vault.deposit(assets, lp);
+        assertEq(minted, expected);
+        uint256 received = vault.redeem(minted, lp, lp);
+        vm.stopPrank();
+        assertLe(received, assets);
+        assertLe(usdc.balanceOf(lp), before);
+        assertEq(vault.balanceOf(lp), 0);
+    }
+
 }

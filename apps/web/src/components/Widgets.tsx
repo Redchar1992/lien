@@ -9,6 +9,7 @@ import { fmt } from '../format'
 export function KycBadge() {
   const { address } = useAccount()
   const { data: verified } = useReadContract({
+    chainId: d.chainId,
     address: d.identityRegistry,
     abi: identityRegistryAbi,
     functionName: 'isVerified',
@@ -32,12 +33,14 @@ export function KycBadge() {
 export function NavCard() {
   const { t } = useI18n()
   const { data: nav } = useReadContract({
+    chainId: d.chainId,
     address: d.navOracle,
     abi: navOracleAbi,
     functionName: 'nav',
     query: { enabled: d.isDeployed, refetchInterval: 12_000 },
   })
   const { data: stale } = useReadContract({
+    chainId: d.chainId,
     address: d.navOracle,
     abi: navOracleAbi,
     functionName: 'isStale',
@@ -50,7 +53,7 @@ export function NavCard() {
         <Hint text={t('nav.hint')} />
       </div>
       <div className="value">{nav !== undefined ? `$${formatUnits(nav, 18)}` : '—'}</div>
-      {stale ? (
+      {stale === undefined ? <div className="badge muted">NAV 状态未知 / unavailable</div> : stale ? (
         <div className="badge warn">
           {t('nav.stale')}
           <Hint text={t('nav.staleHint')} />
@@ -69,6 +72,7 @@ export function PortfolioCard() {
   const { t } = useI18n()
   const { address } = useAccount()
   const { data: balance } = useReadContract({
+    chainId: d.chainId,
     address: d.rwaToken,
     abi: erc20Abi,
     functionName: 'balanceOf',
@@ -76,6 +80,7 @@ export function PortfolioCard() {
     query: { enabled: Boolean(address) && d.isDeployed, refetchInterval: 8000 },
   })
   const { data: nav } = useReadContract({
+    chainId: d.chainId,
     address: d.navOracle,
     abi: navOracleAbi,
     functionName: 'nav',
@@ -99,6 +104,7 @@ export function StatsBar() {
   const { t } = useI18n()
   const marketId = computeMarketId(d.marketParams)
   const { data: market } = useReadContract({
+    chainId: d.chainId,
     address: d.morpho,
     abi: morphoAbi,
     functionName: 'market',
@@ -106,6 +112,7 @@ export function StatsBar() {
     query: { enabled: d.isDeployed, refetchInterval: 15_000 },
   })
   const { data: supply } = useReadContract({
+    chainId: d.chainId,
     address: d.rwaToken,
     abi: erc20Abi,
     functionName: 'totalSupply',

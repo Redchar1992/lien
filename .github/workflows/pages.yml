@@ -1,0 +1,56 @@
+name: Verify and deploy Pages
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable && corepack prepare pnpm@9.15.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @lien/web build
+        env:
+          GITHUB_PAGES: 'true'
+      - run: npm ci --prefix tools/tests
+      - run: npm test --prefix tools/tests
+      - run: cd tools/tests && npx playwright install --with-deps chromium
+      - run: |
+          pnpm --filter @lien/web exec vite preview --host 127.0.0.1 --port 4173 --base /lien/ &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/lien/ && break || sleep 1; done
+          npm run test:browser --prefix tools/tests
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.5.1
+      - run: forge test --summary
+        working-directory: contracts
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: apps/web/dist
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
