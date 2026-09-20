@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "echo \"(sdk) no lint yet\"",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"(sdk) no tests yet\""
+    "test": "rm -rf .test-dist && tsc --outDir .test-dist --module commonjs --moduleResolution node --noEmit false --declaration false --sourceMap false && ../../node_modules/.bin/tsc -p ../core/tsconfig.json --outDir .test-dist/node_modules/@lien/core --module commonjs --moduleResolution node --noEmit false --declaration false --sourceMap false && printf '{\"type\":\"commonjs\",\"main\":\"src/index.js\"}' > .test-dist/node_modules/@lien/core/package.json && printf '{\"type\":\"commonjs\"}' > .test-dist/package.json && node --test .test-dist/test/controlled-vault.test.js && rm -rf .test-dist"
   },
   "dependencies": { "@lien/config": "workspace:*", "@lien/core": "workspace:*" },
   "peerDependencies": { "viem": "^2.21.0" },

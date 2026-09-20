@@ -9,6 +9,14 @@
  */
 
 import type { Address, Hex, PublicClient, WalletClient } from 'viem'
+import {
+  evaluateVaultDepositPolicy,
+  isVaultDepositApprovalValid,
+  type AgentApproval,
+  type AgentPolicyContext,
+  type VaultDepositPlan,
+} from '@lien/core'
+import { vaultAbi } from './abis'
 
 export * from './abis'
 export * from './market'
@@ -27,6 +35,8 @@ export type TxErrorCode =
   | 'INSUFFICIENT_BALANCE'
   | 'INSUFFICIENT_ALLOWANCE'
   | 'CONFIRM_TIMEOUT'
+  | 'POLICY_BLOCKED'
+  | 'APPROVAL_INVALID'
   | 'NETWORK'
   | 'REVERTED'
 
@@ -54,6 +64,8 @@ const CODE_MESSAGE: Record<TxErrorCode, string> = {
   INSUFFICIENT_BALANCE: '余额不足。 / Insufficient balance.',
   INSUFFICIENT_ALLOWANCE: '授权额度不足。 / Insufficient allowance.',
   CONFIRM_TIMEOUT: '确认超时。 / Confirmation timed out.',
+  POLICY_BLOCKED: '策略检查未通过，拒绝执行。 / Policy blocked execution.',
+  APPROVAL_INVALID: '审批与当前计划不匹配。 / Approval does not match the current plan.',
   NETWORK: '网络错误,请重试。 / Network error.',
   REVERTED: '交易回滚。 / Transaction reverted.',
 }
@@ -176,6 +188,39 @@ export async function sendWrite(
     onState?.(failed)
     return failed
   }
+}
+
+/**
+ * Runtime boundary for an approved vault plan.
+ *
+ * The browser may display a plan, but this adapter re-evaluates policy and the
+ * exact approval before entering the generic simulate → sign → receipt runner.
+ * No signer is passed to the Agent domain layer.
+ */
+export async function executeApprovedVaultDeposit(
+  publicClient: PublicClient,
+  walletClient: WalletClient,
+  plan: VaultDepositPlan,
+  approval: AgentApproval,
+  policyContext: AgentPolicyContext,
+  onState?: TxStateListener,
+): Promise<TxState> {
+  const rejected = (code: 'POLICY_BLOCKED' | 'APPROVAL_INVALID', message: string): TxState => {
+    const failed: TxState = { status: 'failed', error: { code, message } }
+    onState?.(failed)
+    return failed
+  }
+  const policy = evaluateVaultDepositPolicy(plan, policyContext)
+  if (!policy.passed) return rejected('POLICY_BLOCKED', CODE_MESSAGE.POLICY_BLOCKED)
+  if (!await isVaultDepositApprovalValid(plan, approval, policyContext)) {
+    return rejected('APPROVAL_INVALID', CODE_MESSAGE.APPROVAL_INVALID)
+  }
+  return sendWrite(publicClient, walletClient, {
+    address: plan.vault as Address,
+    abi: vaultAbi,
+    functionName: 'deposit',
+    args: [plan.amountBaseUnits, plan.receiver as Address],
+  }, onState)
 }
 
 export const SDK_VERSION = '0.1.0'

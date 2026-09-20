@@ -1,5 +1,6 @@
 import { useReducer, useState } from 'react'
 import { amount, display, initialState, transition, myAssets, vaultLiquid, borrowLimit, type Action } from './model'
+import { AgentConsole } from './AgentConsole'
 
 function AmountRow({ label, unit = 'USDC', button, onSubmit }: { label: string; unit?: string; button: string; onSubmit: (value: bigint) => void }) {
   const [value, setValue] = useState('')
@@ -47,6 +48,7 @@ export function Demo() {
       <div className="grid"><AmountRow label="金库存入金额" button="存入金库" onSubmit={act('deposit')} /><AmountRow label="金库提取金额" button="提取 USDC" onSubmit={act('withdraw')} /></div>
       <p className="sub">存入按份额比例向下取整；提取所需份额向上取整。超出 cap 的资金留存；市场借出后，账面资产与可用现金分开显示。</p>
     </section>
+    <AgentConsole state={s} onExecuteDeposit={value => dispatch({ type: 'deposit', value })} />
     <section className="card section"><h2>可解释的操作记录</h2><p className="sub">仅为当前页面的模拟日志，不是链上审计证据。最多保留 30 条。</p><ol className="activity">{s.log.map((line, i) => <li key={`${i}-${line}`}>{line}</li>)}</ol></section>
     <footer className="foot"><strong>信任边界是产品的一部分。</strong><p>白名单不等于法律合规；NAV 不证明底层资产真实存在；金库不保证收益或即时退出。测试网模式使用 mock USDC / tBILL，也不代表真实证券。</p><div className="foot-links"><a href="https://github.com/Redchar1992/lien/blob/main/docs/architecture-and-risks.md">架构与风险边界 ↗</a><a href="https://github.com/Redchar1992/lien/blob/main/docs/demo-runbook.md">演示与验证指南 ↗</a></div></footer>
   </main>

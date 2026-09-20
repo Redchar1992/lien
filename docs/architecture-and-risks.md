@@ -17,6 +17,7 @@ flowchart TD
   K[LiquidationRouter / 已验证托管地址] --> F
   K --> E
   L[Ponder 索引器脚手架 / 未在线部署] -. 事件 .-> E
+  M[受控 Agent / 计划与审批] -. 仅模拟执行 .-> G
 ```
 
 | 层 | 自行实现 / 集成 | 不应夸大的边界 |
@@ -27,6 +28,7 @@ flowchart TD
 | 借贷 | **复用 vendored Morpho Blue**，自建 NAV adapter / 清算 router | 不是自行发明借贷引擎；NAV 拒绝会阻止依赖价格的借款/退出/清算，但不冻结所有方法 |
 | 清算 | 合规托管 router 持有 RWA，USDC buffer 支付激励 | 依赖 buffer、赎回流动性与白名单；不是无条件可执行清算 |
 | 金库 | **复用 OZ ERC-4626**，自建 cap / 队列分配层 | 缺 timelock、费用与生产级治理，cap 不是损失上限；只有一个配置市场时不能称已分散风险 |
+| 受控 Agent | 窄范围意图 → 结构化计划 → 模型外策略 → 精确审批 → 模拟执行；session/artifact 记录完整流程 | 当前 parser 是确定性替身，执行仅为 wallet-free simulation；审批指纹不是钱包签名，也不代表法律合规 |
 | 索引器 | Ponder 事件处理与 schema 脚手架 | Pages 不提供服务端；当前界面读 RPC，而不是已上线数据平台 |
 
 ## 角色与资金

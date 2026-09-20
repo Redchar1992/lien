@@ -16,3 +16,5 @@ export function healthFactorWad(weightedCollateral: bigint, debtValue: bigint): 
 export function navValue(rwaAmount: bigint, navWad: bigint): bigint {
   return (rwaAmount * navWad) / WAD
 }
+
+export * from './agent'
