@@ -208,7 +208,7 @@ export function AgentConsole({ state, onExecuteDeposit }: AgentConsoleProps) {
         <button type="button" className="secondary" onClick={() => setRequest('查看我的余额')}>不支持请求</button>
       </div>
     </form>
-    <div className={`agent-notice ${policy && !policy.passed ? 'blocked' : ''}`} role="status" aria-live="polite">{notice}</div>
+    <div className={`agent-notice ${policy && !policy.passed ? 'blocked' : ''}`} aria-live="polite">{notice}</div>
     <div className="agent-layout">
       <div className="agent-plan-panel">
         <div className="agent-panel-title"><span>Plan artifact</span><span className={`badge ${policy?.passed ? 'ok' : policy ? 'danger' : 'muted'}`}>{policy?.passed ? '可审批' : policy ? '已阻止' : '未生成'}</span></div>
